@@ -52,6 +52,7 @@ function App() {
       const usernameFromEmail = email.split('@')[0];
       await signIn({ username: usernameFromEmail, password });
       
+      //change token according to new one
       const myToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2aWRlbyI6eyJyb29tSm9pbiI6dHJ1ZSwicm9vbSI6ImludGVydmlldy1yb29tIiwiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuU3Vic2NyaWJlIjp0cnVlLCJjYW5QdWJsaXNoRGF0YSI6dHJ1ZX0sInN1YiI6Ik1heWEiLCJpc3MiOiJBUElEVmY1WmNqTnBnek4iLCJuYmYiOjE3NzM4NTU0NjcsImV4cCI6MTc3Mzg3NzA2N30.7GU7owgYLcsrkzIw_eo_JmOP4X1bT0KQHY3nk-4RDuQ"; 
       setToken(myToken);
       setIsLoggedIn(true);
