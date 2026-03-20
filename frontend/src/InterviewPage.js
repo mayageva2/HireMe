@@ -1,14 +1,25 @@
 import React, { useState } from 'react';
 import { 
   LiveKitRoom, 
-  AudioConference, 
   ControlBar, 
-  VideoConference,
   ParticipantTile,
+  AudioConference,
+  useTracks,
   useTranscriptions,
-  TrackLoop
+  GridLayout
 } from '@livekit/components-react';
+import { Track } from 'livekit-client';
 import '@livekit/components-styles';
+
+function MyVideoLayout() {
+    const tracks = useTracks([Track.Source.Camera]);
+
+  return (
+    <GridLayout tracks={tracks} style={{ height: 'calc(100vh - 200px)' }}>
+      <ParticipantTile />
+    </GridLayout>
+  );
+}
 
 function LiveTranscription() {
   const segments = useTranscriptions();
@@ -74,9 +85,10 @@ const InterviewPage = ({ token }) => {
                 onError={(err) => console.error("Room Error:", err)}
             >
             
-                <VideoConference />
+                <MyVideoLayout />
+                <AudioConference />
+                <ControlBar controls={{ screenShare: false }} />
                 <LiveTranscription />
-                <ControlBar />
         </LiveKitRoom>
         </div>
     );
