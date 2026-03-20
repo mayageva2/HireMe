@@ -3,7 +3,10 @@ import {
   LiveKitRoom, 
   AudioConference, 
   ControlBar, 
-  useTranscriptions
+  VideoConference,
+  ParticipantTile,
+  useTranscriptions,
+  TrackLoop
 } from '@livekit/components-react';
 import '@livekit/components-styles';
 
@@ -58,21 +61,22 @@ const InterviewPage = ({ token }) => {
     }
 
     return (
-        <div style={{ padding: '20px' }}>
-        <h2>Interview Session</h2>
-        <LiveKitRoom
-            video={true} 
-            audio={true}
-            token={token}
-            serverUrl={serverUrl}
-            connect={true}
-            data-lk-theme="default"
-            onConnected={() => console.log("Connected!")}
-            onError={(err) => console.error("Room Error:", err)}
-        >
-            <AudioConference />
-            <ControlBar />
-            <LiveTranscription />
+        <div style={{ padding: '20px', height: '100vh', backgroundColor: '#111', color: 'white' }}>
+            <h2>Interview Session</h2>
+            <LiveKitRoom
+                video={true} 
+                audio={true}
+                token={token}
+                serverUrl={serverUrl}
+                connect={true}
+                data-lk-theme="default"
+                onConnected={() => console.log("Connected!")}
+                onError={(err) => console.error("Room Error:", err)}
+            >
+            
+                <VideoConference />
+                <LiveTranscription />
+                <ControlBar />
         </LiveKitRoom>
         </div>
     );
