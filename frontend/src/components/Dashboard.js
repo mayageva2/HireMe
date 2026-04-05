@@ -80,8 +80,15 @@ const Dashboard = () => {
             <button className="p-2 text-[#a5abbd] hover:text-white transition-colors">
               <span className="material-symbols-outlined">notifications</span>
             </button>
-            <div className="w-8 h-8 rounded-full bg-[#1c2a41] border border-[#5bf4de]/20 flex items-center justify-center text-[10px] font-bold text-[#5bf4de]">
-              AR
+            <div 
+              onClick={handlePhotoClick}
+              className="w-8 h-8 rounded-full bg-[#1c2a41] border border-[#5bf4de]/20 flex items-center justify-center text-[10px] font-bold text-[#5bf4de] cursor-pointer overflow-hidden transition-all hover:border-[#5bf4de]"
+            >
+              {profileImg ? (
+                <img src={profileImg} alt="header profile" className="w-full h-full object-cover" />
+              ) : (
+                "AR"
+              )}
             </div>
           </div>
         </div>
