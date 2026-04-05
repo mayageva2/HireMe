@@ -32,5 +32,19 @@ export const authService = {
       email: attributes.email,
       stats: { interviews: 12, offers: 4, score: 8.5 } // Mock data needs to be changed!!
     };
+  },
+  
+  async getCurrentUser() {
+    try {
+    const attributes = await fetchUserAttributes();
+    
+    return {
+        fullName: attributes.name || "User",
+        profession: attributes['custom:profession'] || "Professional",
+        email: attributes.email,
+    };
+    } catch (error) {
+        return null;
+    }
   }
 };

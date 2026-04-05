@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import { Amplify } from 'aws-amplify';
 import awsConfig from './aws-exports';
 import { authService } from './services/authService';
@@ -13,11 +13,41 @@ function App() {
   const [userProfile, setUserProfile] = useState(null);
   const [view, setView] = useState('dashboard');
   const [token] = useState("YOUR_HARDCODED_TOKEN_FOR_NOW");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        // Assuming your authService has a getCurrentUser method
+        const user = await authService.getCurrentUser(); 
+        if (user) {
+          setUserProfile(user);
+          setIsLoggedIn(true);
+        }
+      } catch (err) {
+        console.log("No active session found");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkUser();
+  }, []);
 
   const handleLoginSuccess = (profile) => {
     setUserProfile(profile);
     setIsLoggedIn(true);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#080e1c] flex items-center justify-center">
+        <div className="text-[#5bf4de] font-black text-2xl animate-pulse tracking-tighter">
+          HireMe
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     return <AuthPage onLoginSuccess={handleLoginSuccess} authService={authService} />;
