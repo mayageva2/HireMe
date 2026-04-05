@@ -1,11 +1,25 @@
 import React, { useState } from 'react';
 import { 
   LiveKitRoom, 
-  AudioConference, 
   ControlBar, 
-  useTranscriptions
+  ParticipantTile,
+  AudioConference,
+  useTracks,
+  useTranscriptions,
+  GridLayout
 } from '@livekit/components-react';
+import { Track } from 'livekit-client';
 import '@livekit/components-styles';
+
+function MyVideoLayout() {
+    const tracks = useTracks([Track.Source.Camera]);
+
+  return (
+    <GridLayout tracks={tracks} style={{ height: 'calc(100vh - 200px)' }}>
+      <ParticipantTile />
+    </GridLayout>
+  );
+}
 
 function LiveTranscription() {
   const segments = useTranscriptions();
@@ -58,21 +72,23 @@ const InterviewPage = ({ token }) => {
     }
 
     return (
-        <div style={{ padding: '20px' }}>
-        <h2>Interview Session</h2>
-        <LiveKitRoom
-            video={true} 
-            audio={true}
-            token={token}
-            serverUrl={serverUrl}
-            connect={true}
-            data-lk-theme="default"
-            onConnected={() => console.log("Connected!")}
-            onError={(err) => console.error("Room Error:", err)}
-        >
-            <AudioConference />
-            <ControlBar />
-            <LiveTranscription />
+        <div style={{ padding: '20px', height: '100vh', backgroundColor: '#111', color: 'white' }}>
+            <h2>Interview Session</h2>
+            <LiveKitRoom
+                video={true} 
+                audio={true}
+                token={token}
+                serverUrl={serverUrl}
+                connect={true}
+                data-lk-theme="default"
+                onConnected={() => console.log("Connected!")}
+                onError={(err) => console.error("Room Error:", err)}
+            >
+            
+                <MyVideoLayout />
+                <AudioConference />
+                <ControlBar controls={{ screenShare: false }} />
+                <LiveTranscription />
         </LiveKitRoom>
         </div>
     );
