@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import avatarSimulationPic from '../assets/avatarImage.png'; 
+import cvDraftPic from '../assets/fakeCv.png';
 
 const mockData = {
   user: {
@@ -35,23 +36,91 @@ const Dashboard = () => {
     outline: "#424858",
   };
 
+  const [hasDraft, setHasDraft] = useState(true);
+  
+  const navItems = [
+    { label: 'CV Builder', icon: 'description' },
+    { label: 'AI Avatar Simulation', icon: 'smart_toy' },
+  ];
+
   const handleEnterSimulation = () => {
     console.log("Starting Avatar Simulation...");
   };
 
   return (
     <div className="min-h-screen text-[#e0e5f9] font-inter" style={{ backgroundColor: theme.background }}>
-      {/* Main Content */}
-      <main className="pt-10 p-6 max-w-[1600px] mx-auto">
+      
+      <header className="fixed top-0 w-full z-50">
+        {/* Top Branding Bar */}
+        <div className="border-b border-[#424858]/20 px-6 h-16 flex items-center justify-between" style={{ backgroundColor: theme.background }}>
+          <div className="flex items-center gap-8">
+            <span className="text-2xl font-black tracking-tighter" style={{ color: theme.primary }}>HireMe</span>
+            <div className="h-6 w-[1px] bg-[#424858]/30 hidden md:block"></div>
+            <h1 className="text-sm font-bold hidden md:block">Hello, {mockData.user.fullName}</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="p-2 text-[#a5abbd] hover:text-white transition-colors">
+              <span className="material-symbols-outlined">notifications</span>
+            </button>
+            <div className="w-8 h-8 rounded-full bg-[#1c2a41] border border-[#5bf4de]/20 flex items-center justify-center text-[10px] font-bold text-[#5bf4de]">
+              AR
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation Toolbar */}
+        <div className="px-6 py-2 flex items-center border-b border-[#424858]/20 justify-between" style={{ backgroundColor: theme.surface }}>
+          <nav className="flex items-center gap-1">
+            <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all" 
+                    style={{ backgroundColor: theme.background, color: theme.primary }}>
+              <span className="material-symbols-outlined text-lg">dashboard</span>
+              Dashboard
+            </button>
+
+            {navItems.map((item) => (
+              <button key={item.label} className="flex items-center gap-2 px-4 py-2 text-[#a5abbd] hover:text-white hover:bg-[#080e1c]/50 rounded-lg transition-all text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                <span className="material-symbols-outlined text-lg">{item.icon}</span>
+                {item.label}
+              </button>
+            ))}
+
+            <div className="relative group">
+              <button className="flex items-center gap-2 px-4 py-2 text-[#a5abbd] group-hover:text-white group-hover:bg-[#080e1c]/50 rounded-lg transition-all text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                <span className="material-symbols-outlined text-lg">quiz</span>
+                Practice Questions
+                <span className="material-symbols-outlined text-xs transition-transform group-hover:rotate-180">expand_more</span>
+              </button>
+
+              <div className="absolute top-full left-0 mt-1 w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top scale-95 group-hover:scale-100 z-50">
+                <div className="p-2 rounded-xl border border-[#424858]/30 shadow-2xl" style={{ backgroundColor: theme.surface }}>
+                  <button className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-[#a5abbd] hover:text-[#5bf4de] hover:bg-[#080e1c]/50 rounded-lg transition-all uppercase tracking-wider whitespace-nowrap">
+                    <span className="material-symbols-outlined text-sm">code</span>
+                    Technical Questions
+                  </button>
+                  <button className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-[#a5abbd] hover:text-[#5bf4de] hover:bg-[#080e1c]/50 rounded-lg transition-all uppercase tracking-wider whitespace-nowrap">
+                    <span className="material-symbols-outlined text-sm">record_voice_over</span>
+                    HR Questions
+                  </button>
+                </div>
+              </div>
+            </div>
+          </nav>
+          
+          <button className="px-4 py-2 bg-gradient-to-r from-[#5bf4de] to-[#11c9b4] text-[#080e1c] font-black text-[10px] rounded-lg uppercase tracking-widest shadow-lg active:scale-95 transition-all">
+            Upgrade to Pro
+          </button>
+        </div>
+      </header>
+
+      <main className="pt-36 p-6 max-w-[1600px] mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           
-          {/* LEFT COLUMN: Profile & Question Bank */}
+          {/* LEFT COLUMN */}
           <div className="md:col-span-3 space-y-6">
-            {/* Profile Card */}
             <div className="p-6 rounded-[16px] border border-[#424858]/20 flex flex-col items-center text-center" style={{ backgroundColor: theme.surface }}>
               <div className="relative mb-4">
                 <div className="w-24 h-24 rounded-xl bg-[#1c2a41] flex items-center justify-center border-2 border-[#5bf4de]/20 text-3xl font-black text-[#5bf4de]">
-                  AL
+                  AR
                 </div>
                 <div className="absolute -bottom-2 right-0 bg-[#5bf4de] text-[#080e1c] px-2 py-0.5 rounded text-[9px] font-black">VERIFIED</div>
               </div>
@@ -60,7 +129,7 @@ const Dashboard = () => {
               
               <div className="w-full space-y-2 mb-8">
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                  <span className="text-[#a5abbd]">Profile Completion</span>
+                  <span className="text-[#a5abbd]">progress</span>
                   <span className="text-[#5bf4de]">82%</span>
                 </div>
                 <div className="h-1.5 bg-black/40 rounded-full overflow-hidden">
@@ -69,31 +138,29 @@ const Dashboard = () => {
               </div>
 
               <div className="grid grid-cols-3 gap-2 w-full pt-4 border-t border-[#424858]/20">
-                <div><p className="text-lg font-black text-[#5bf4de]">{mockData.user.stats.interviews}</p><p className="text-[8px] text-[#a5abbd] uppercase">Interviews</p></div>
-                <div className="border-x border-[#424858]/20"><p className="text-lg font-black text-[#5bf4de]">04</p><p className="text-[8px] text-[#a5abbd] uppercase">Offers</p></div>
-                <div><p className="text-lg font-black text-[#5bf4de]">{mockData.user.stats.score}</p><p className="text-[8px] text-[#a5abbd] uppercase">Avg Score</p></div>
+                <div><p className="text-lg font-black text-[#5bf4de]">{mockData.user.stats.interviews}</p><p className="text-[8px] text-[#a5abbd] uppercase font-bold">Interviews</p></div>
+                <div className="border-x border-[#424858]/20"><p className="text-lg font-black text-[#5bf4de]">04</p><p className="text-[8px] text-[#a5abbd] uppercase font-bold">Offers</p></div>
+                <div><p className="text-lg font-black text-[#5bf4de]">{mockData.user.stats.score}</p><p className="text-[8px] text-[#a5abbd] uppercase font-bold">Avg Score</p></div>
               </div>
             </div>
             
-            {/* Question Bank */}
             <div className="p-6 rounded-[16px] border border-[#424858]/20" style={{ backgroundColor: theme.surface }}>
-              <h3 className="font-bold text-sm mb-4 uppercase tracking-wider text-[#a5abbd]">Question Bank</h3>
+              <h3 className="font-bold text-sm mb-4 uppercase tracking-wider text-[#a5abbd]">Quick Access</h3>
               <div className="space-y-2">
                 <button className="w-full text-left p-3 bg-black/30 hover:bg-black/50 rounded-lg flex justify-between items-center transition-all border border-transparent hover:border-[#5bf4de]/30">
-                  <span className="text-sm font-semibold">Technical Q's</span>
+                  <span className="text-sm font-semibold">Technical Questions</span>
                   <span className="material-symbols-outlined text-sm text-[#5bf4de]">chevron_right</span>
                 </button>
                 <button className="w-full text-left p-3 bg-black/30 hover:bg-black/50 rounded-lg flex justify-between items-center transition-all border border-transparent hover:border-[#5bf4de]/30">
-                  <span className="text-sm font-semibold">HR & Behavioral</span>
+                  <span className="text-sm font-semibold">HR Questions</span>
                   <span className="material-symbols-outlined text-sm text-[#5bf4de]">chevron_right</span>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* MIDDLE COLUMN: Analytics & Simulation */}
+          {/* MIDDLE COLUMN */}
           <div className="md:col-span-5 space-y-6">
-            {/* Performance Analytics */}
             <div className="p-6 rounded-[16px] border border-[#424858]/20" style={{ backgroundColor: theme.surface }}>
               <div className="flex justify-between items-center mb-8">
                 <h3 className="font-bold">Performance Analytics</h3>
@@ -117,7 +184,6 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Skill Breakdown Bars */}
               <div className="space-y-4">
                 {mockData.analytics.skills.map(skill => (
                   <div key={skill.name}>
@@ -133,21 +199,15 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Live Simulation Card with Image & Action Button */}
             <div className="relative rounded-[16px] overflow-hidden aspect-video bg-black border border-[#424858]/20 group">
-              {/* Background Image */}
               <img 
                 src={avatarSimulationPic} 
                 className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" 
                 alt="Avatar Simulation"
               />
-              
-              {/* Gradient Overlay for Text Readability */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10"></div>
-              
-              {/* Content Overlay */}
               <div className="absolute inset-0 flex flex-col items-center justify-center z-20 p-6 text-center">
-                <h3 className="text-xl font-black text-white mb-2 shadow-sm">AI Interview Simulation</h3>
+                <h3 className="text-xl font-black text-white mb-2">Practice with Ava</h3>
                 <p className="text-[#e0e5f9] text-[11px] mb-6 max-w-[280px] leading-relaxed opacity-90">
                   Ready to test your skills? Start a real-time session with Ava.
                 </p>
@@ -158,14 +218,10 @@ const Dashboard = () => {
                   Enter Avatar Simulation
                 </button>
               </div>
-
-              {/* Badges */}
               <div className="absolute top-4 left-4 flex gap-2 z-30">
                  <span className="bg-[#5bf4de]/90 text-[#080e1c] text-[9px] font-black px-2 py-1 rounded shadow-lg">LIVE SIMULATION</span>
                  <span className="bg-red-500/90 text-white text-[9px] font-black px-2 py-1 rounded shadow-lg animate-pulse">● REC</span>
               </div>
-              
-              {/* Label at bottom left */}
               <div className="absolute bottom-4 left-4 z-30 text-left">
                 <p className="text-white font-bold text-sm tracking-tight">Ava (AI)</p>
                 <p className="text-[#5bf4de] text-[10px] font-bold tracking-widest">FAANG SPECIALIST</p>
@@ -173,17 +229,45 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* RIGHT COLUMN: CV Intelligence */}
-          <div className="md:col-span-4">
-             <div className="p-6 rounded-[16px] border border-[#424858]/20 h-full flex flex-col" style={{ backgroundColor: theme.surface }}>
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="font-bold">CV Intelligence</h3>
-                  <span className="material-symbols-outlined text-[#5bf4de] opacity-50">description</span>
+          {/* RIGHT COLUMN: CV INTELLIGENCE UNIT */}
+          <div className="md:col-span-4 flex flex-col">
+            <div className="p-6 rounded-[16px] border border-[#424858]/20 flex flex-col h-full" style={{ backgroundColor: theme.surface }}>
+              
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="font-bold">CV Intelligence</h3>
+                <div className="relative flex items-center group cursor-pointer">
+                  <span className="material-symbols-outlined text-[#5bf4de] group-hover:scale-110 transition-transform">post_add</span>
                 </div>
+              </div>
 
-                <div className="bg-black/40 border-l-2 border-[#5bf4de] p-4 rounded-r-lg mb-8">
+              <div className="relative rounded-xl overflow-hidden aspect-[4/3] bg-black border border-[#424858]/30 mb-6 group">
+                {hasDraft ? (
+                  <>
+                    <img 
+                      src={cvDraftPic} 
+                      className="absolute inset-0 w-full h-full object-cover blur-[1px] opacity-50 group-hover:scale-105 transition-transform duration-700" 
+                      alt="CV Draft Preview"
+                    />
+                    <div className="absolute inset-0 bg-black/40 z-10"></div>
+                    <div className="absolute inset-0 flex items-center justify-center z-20">
+                      <button className="flex items-center gap-2 px-5 py-2 bg-[#080e1c] border border-[#5bf4de]/30 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-all hover:border-[#5bf4de]">
+                        <span className="material-symbols-outlined text-base text-[#5bf4de]">search</span>
+                        Preview Current Draft
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 text-[#a5abbd]">
+                    <span className="material-symbols-outlined text-4xl mb-3 opacity-20">cloud_upload</span>
+                    <p className="font-bold text-xs">Upload Your CV</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-6 flex-1">
+                <div className="bg-black/30 border-l-2 border-[#5bf4de] p-4 rounded-r-lg">
                   <p className="text-xs italic text-[#e0e5f9] leading-relaxed">
-                    "Your CV is missing keyword density for 'Cloud Architecture'. Consider adding specific AWS certifications to the header."
+                    "Your CV is missing keyword density for 'Cloud Architecture'. Consider adding specific AWS certifications."
                   </p>
                   <div className="mt-2 flex items-center gap-1">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#5bf4de]"></div>
@@ -191,26 +275,29 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <h4 className="text-[10px] font-black uppercase text-[#a5abbd] mb-4 tracking-widest">Top Suggestions</h4>
-                <ul className="space-y-4 flex-1">
-                  {mockData.cvSuggestions.map((text, i) => (
-                    <li key={i} className="flex items-start gap-3 text-xs text-[#e0e5f9] group cursor-pointer">
-                      <span className="material-symbols-outlined text-[#5bf4de] text-sm mt-0.5 group-hover:scale-125 transition-transform">check_circle</span>
-                      <span className="group-hover:text-white transition-colors">{text}</span>
-                    </li>
-                  ))}
-                </ul>
+                <div>
+                  <h4 className="text-[10px] font-black uppercase text-[#a5abbd] mb-4 tracking-widest">Top Suggestions</h4>
+                  <ul className="space-y-4">
+                    {mockData.cvSuggestions.map((text, i) => (
+                      <li key={i} className="flex items-start gap-3 text-xs text-[#e0e5f9] group cursor-pointer">
+                        <span className="material-symbols-outlined text-[#5bf4de] text-sm mt-0.5 group-hover:scale-125 transition-transform">check_circle</span>
+                        <span className="group-hover:text-white transition-colors">{text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
-                <button className="w-full py-3 mt-6 border border-[#5bf4de]/30 rounded-lg text-[#5bf4de] text-[10px] font-black uppercase hover:bg-[#5bf4de]/10 transition-all">
-                  Full Resume Audit
+                <button className="w-full py-3 mt-auto border border-[#5bf4de]/30 rounded-lg text-[#5bf4de] text-[10px] font-black uppercase hover:bg-[#5bf4de]/10 transition-all">
+                  Edit Resume
                 </button>
-             </div>
+              </div>
+
+            </div>
           </div>
 
         </div>
       </main>
 
-      {/* Floating Action Button */}
       <button className="fixed bottom-8 right-8 w-14 h-14 bg-[#5bf4de] rounded-full text-[#080e1c] shadow-[0_10px_30px_rgba(91,244,222,0.3)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all group">
         <span className="material-symbols-outlined text-2xl font-bold group-hover:rotate-90 transition-transform">add</span>
       </button>
