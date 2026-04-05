@@ -105,10 +105,6 @@ const Dashboard = () => {
               </div>
             </div>
           </nav>
-          
-          <button className="px-4 py-2 bg-gradient-to-r from-[#5bf4de] to-[#11c9b4] text-[#080e1c] font-black text-[10px] rounded-lg uppercase tracking-widest shadow-lg active:scale-95 transition-all">
-            Upgrade to Pro
-          </button>
         </div>
       </header>
 
@@ -162,7 +158,7 @@ const Dashboard = () => {
           {/* MIDDLE COLUMN */}
           <div className="md:col-span-5 space-y-6">
             <div className="p-6 rounded-[16px] border border-[#424858]/20" style={{ backgroundColor: theme.surface }}>
-              <div className="flex justify-between items-center mb-8">
+              <div className="flex items-center justify-between mb-8 border-b border-[#424858]/10 pb-4">
                 <h3 className="font-bold">Performance Analytics</h3>
                 <div className="flex bg-black/20 rounded-full p-1">
                   <button className="px-3 py-1 text-[10px] bg-[#2c3951] rounded-full">Weekly</button>
@@ -170,32 +166,41 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-8 mb-8">
-                <div>
-                  <p className="text-[10px] text-[#a5abbd] uppercase font-bold mb-1">Readiness Trend</p>
-                  <div className="text-2xl font-black text-[#5bf4de] flex items-center gap-2">
-                    {mockData.analytics.readiness} 
-                    <span className="text-xs bg-[#5bf4de]/10 px-2 py-0.5 rounded">+12.5%</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-[#a5abbd] uppercase font-bold mb-1">Market Percentile</p>
-                  <div className="text-2xl font-black text-white">{mockData.analytics.percentile}</div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {mockData.analytics.skills.map(skill => (
-                  <div key={skill.name}>
-                    <div className="flex justify-between text-[10px] mb-1 font-bold uppercase tracking-tighter">
-                      <span className="text-[#a5abbd]">{skill.name}</span>
-                      <span className="text-white">{skill.level}%</span>
-                    </div>
-                    <div className="h-1 bg-black/40 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#5bf4de]" style={{ width: `${skill.level}%` }}></div>
+              <div className="flex flex-col lg:flex-row gap-8">
+                <div className="flex-1 flex flex-col">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <p className="text-[10px] text-[#a5abbd] uppercase font-bold">Interview Score</p>
+                      <h4 className="text-2xl font-black text-[#5bf4de]">8.5<span className="text-xs text-[#a5abbd] font-normal ml-1">/10</span></h4>
                     </div>
                   </div>
-                ))}
+                  <div className="w-full aspect-[2/1] mt-auto">
+                    <svg viewBox="0 0 200 100" className="w-full h-full">
+                      <line x1="0" y1="35" x2="200" y2="35" stroke="#424858" strokeWidth="1" strokeDasharray="4 4" /> 
+                      <path d="M0 80 Q 25 70, 50 60 T 100 40 T 150 20 T 200 10 L 200 100 L 0 100 Z" fill="#1b3f3b" opacity="0.5" />
+                      <path d="M0 80 Q 25 70, 50 60 T 100 40 T 150 20 T 200 10" stroke="#5bf4de" strokeWidth="3" fill="none" strokeLinecap="round"/>
+                      <text x="10" y="95" fill="#a5abbd" fontSize="8" fontWeight="bold">SESSION 1</text>
+                      <text x="140" y="95" fill="#a5abbd" fontSize="8" fontWeight="bold">LAST SESSION</text>
+                    </svg>
+                  </div>
+                </div>
+                <div className="hidden lg:block w-[1px] bg-[#424858]/20"></div>
+                <div className="flex-1">
+                  <p className="text-[10px] text-[#a5abbd] uppercase font-bold mb-4">Skill Breakdown</p>
+                  <div className="space-y-4">
+                    {mockData.analytics.skills.map(skill => (
+                      <div key={skill.name}>
+                        <div className="flex justify-between text-[10px] mb-1 font-bold uppercase">
+                          <span className="text-[#a5abbd]">{skill.name}</span>
+                          <span className="text-white">{skill.level}%</span>
+                        </div>
+                        <div className="h-1 bg-black/40 rounded-full overflow-hidden">
+                          <div className="h-full bg-[#5bf4de]" style={{ width: `${skill.level}%` }}></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -297,10 +302,6 @@ const Dashboard = () => {
 
         </div>
       </main>
-
-      <button className="fixed bottom-8 right-8 w-14 h-14 bg-[#5bf4de] rounded-full text-[#080e1c] shadow-[0_10px_30px_rgba(91,244,222,0.3)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all group">
-        <span className="material-symbols-outlined text-2xl font-bold group-hover:rotate-90 transition-transform">add</span>
-      </button>
     </div>
   );
 };
