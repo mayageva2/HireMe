@@ -26,7 +26,10 @@ function App() {
   return (
     <>
       {view === 'dashboard' ? (
-        <Dashboard user={userProfile} onStartInterview={() => setView('interview')} />
+        <Dashboard 
+          user={userProfile} 
+          onStartInterview={() => setView('interview')}
+        />
       ) : (
         <InterviewPage token={token} onBack={() => setView('dashboard')} />
       )}

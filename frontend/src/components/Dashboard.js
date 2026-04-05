@@ -26,7 +26,7 @@ const mockData = {
   ]
 };
 
-const Dashboard = () => {
+const Dashboard = ({ onStartInterview }) => {
   const theme = {
     background: "#080e1c",
     surface: "#12192a",
@@ -37,7 +37,6 @@ const Dashboard = () => {
   };
 
   const [hasDraft, setHasDraft] = useState(true);
-
   const [profileImg, setProfileImg] = useState(null);
   const fileInputRef = useRef(null);
 
@@ -61,15 +60,18 @@ const Dashboard = () => {
     { label: 'AI Avatar Simulation', icon: 'smart_toy' },
   ];
 
+  // This is the function that triggers the view change in App.js
   const handleEnterSimulation = () => {
     console.log("Starting Avatar Simulation...");
+    if (onStartInterview) {
+      onStartInterview();
+    }
   };
 
   return (
     <div className="min-h-screen text-[#e0e5f9] font-inter" style={{ backgroundColor: theme.background }}>
       
       <header className="fixed top-0 w-full z-50">
-        {/* Top Branding Bar */}
         <div className="border-b border-[#424858]/20 px-6 h-16 flex items-center justify-between" style={{ backgroundColor: theme.background }}>
           <div className="flex items-center gap-8">
             <span className="text-2xl font-black tracking-tighter" style={{ color: theme.primary }}>HireMe</span>
@@ -84,16 +86,11 @@ const Dashboard = () => {
               onClick={handlePhotoClick}
               className="w-8 h-8 rounded-full bg-[#1c2a41] border border-[#5bf4de]/20 flex items-center justify-center text-[10px] font-bold text-[#5bf4de] cursor-pointer overflow-hidden transition-all hover:border-[#5bf4de]"
             >
-              {profileImg ? (
-                <img src={profileImg} alt="header profile" className="w-full h-full object-cover" />
-              ) : (
-                "AR"
-              )}
+              {profileImg ? <img src={profileImg} alt="header profile" className="w-full h-full object-cover" /> : "AR"}
             </div>
           </div>
         </div>
 
-        {/* Navigation Toolbar */}
         <div className="px-6 py-2 flex items-center border-b border-[#424858]/20 justify-between" style={{ backgroundColor: theme.surface }}>
           <nav className="flex items-center gap-1">
             <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all" 
@@ -103,7 +100,11 @@ const Dashboard = () => {
             </button>
 
             {navItems.map((item) => (
-              <button key={item.label} className="flex items-center gap-2 px-4 py-2 text-[#a5abbd] hover:text-white hover:bg-[#080e1c]/50 rounded-lg transition-all text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+              <button 
+                key={item.label} 
+                onClick={item.label === 'AI Avatar Simulation' ? handleEnterSimulation : undefined}
+                className="flex items-center gap-2 px-4 py-2 text-[#a5abbd] hover:text-white hover:bg-[#080e1c]/50 rounded-lg transition-all text-xs font-bold uppercase tracking-wider whitespace-nowrap"
+              >
                 <span className="material-symbols-outlined text-lg">{item.icon}</span>
                 {item.label}
               </button>
@@ -122,7 +123,7 @@ const Dashboard = () => {
                     <span className="material-symbols-outlined text-sm">code</span>
                     Technical Questions
                   </button>
-                  <button className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-[#a5abbd] hover:text-[#5bf4de] hover:bg-[#080e1c]/50 rounded-lg transition-all uppercase tracking-wider whitespace-nowrap">
+                  <button onClick={handleEnterSimulation} className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-[#a5abbd] hover:text-[#5bf4de] hover:bg-[#080e1c]/50 rounded-lg transition-all uppercase tracking-wider whitespace-nowrap">
                     <span className="material-symbols-outlined text-sm">record_voice_over</span>
                     HR Questions
                   </button>
@@ -139,24 +140,15 @@ const Dashboard = () => {
           {/* LEFT COLUMN */}
           <div className="md:col-span-3 space-y-6">
             <div className="p-6 rounded-[16px] border border-[#424858]/20 flex flex-col items-center text-center" style={{ backgroundColor: theme.surface }}>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handlePhotoChange} 
-                className="hidden" 
-                accept="image/*" 
-              />
+              <input type="file" ref={fileInputRef} onChange={handlePhotoChange} className="hidden" accept="image/*" />
               <div className="relative mb-4 group cursor-pointer" onClick={handlePhotoClick}>
                 <div className="w-24 h-24 rounded-xl bg-[#1c2a41] flex items-center justify-center border-2 border-[#5bf4de]/20 text-3xl font-black text-[#5bf4de] overflow-hidden transition-all group-hover:border-[#5bf4de]/60">
-                  {profileImg ? (
-                    <img src={profileImg} alt="profile" className="w-full h-full object-cover" />
-                  ) : (
-                    "AR"
-                  )}
+                  {profileImg ? <img src={profileImg} alt="profile" className="w-full h-full object-cover" /> : "AR"}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-xl">
                     <span className="material-symbols-outlined text-white text-2xl">photo_camera</span>
                   </div>
                 </div>
+                <div className="absolute -bottom-2 right-0 bg-[#5bf4de] text-[#080e1c] px-2 py-0.5 rounded text-[9px] font-black">VERIFIED</div>
               </div>
               <h2 className="text-xl font-black">{mockData.user.fullName}</h2>
               <p className="text-[#a5abbd] text-xs mb-6">{mockData.user.profession}</p>
@@ -185,7 +177,7 @@ const Dashboard = () => {
                   <span className="text-sm font-semibold">Technical Questions</span>
                   <span className="material-symbols-outlined text-sm text-[#5bf4de]">chevron_right</span>
                 </button>
-                <button className="w-full text-left p-3 bg-black/30 hover:bg-black/50 rounded-lg flex justify-between items-center transition-all border border-transparent hover:border-[#5bf4de]/30">
+                <button onClick={handleEnterSimulation} className="w-full text-left p-3 bg-black/30 hover:bg-black/50 rounded-lg flex justify-between items-center transition-all border border-transparent hover:border-[#5bf4de]/30">
                   <span className="text-sm font-semibold">HR Questions</span>
                   <span className="material-symbols-outlined text-sm text-[#5bf4de]">chevron_right</span>
                 </button>
@@ -243,23 +235,12 @@ const Dashboard = () => {
             </div>
 
             <div className="relative rounded-[16px] overflow-hidden aspect-video bg-black border border-[#424858]/20 group">
-              <img 
-                src={avatarSimulationPic} 
-                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" 
-                alt="Avatar Simulation"
-              />
+              <img src={avatarSimulationPic} className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" alt="Avatar Simulation" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10"></div>
               <div className="absolute inset-0 flex flex-col items-center justify-center z-20 p-6 text-center">
                 <h3 className="text-xl font-black text-white mb-2">Practice with Ava</h3>
-                <p className="text-[#e0e5f9] text-[11px] mb-6 max-w-[280px] leading-relaxed opacity-90">
-                  Ready to test your skills? Start a real-time session with Ava.
-                </p>
-                <button 
-                  onClick={handleEnterSimulation}
-                  className="px-6 py-2.5 bg-[#5bf4de] text-[#080e1c] rounded-full text-[11px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(91,244,222,0.3)] hover:scale-105 active:scale-95 transition-all"
-                >
-                  Enter Avatar Simulation
-                </button>
+                <p className="text-[#e0e5f9] text-[11px] mb-6 max-w-[280px] leading-relaxed opacity-90">Ready to test your skills? Start a real-time session with Ava.</p>
+                <button onClick={handleEnterSimulation} className="px-6 py-2.5 bg-[#5bf4de] text-[#080e1c] rounded-full text-[11px] font-black uppercase tracking-widest shadow-xl hover:scale-105 transition-all">Enter Avatar Simulation</button>
               </div>
               <div className="absolute top-4 left-4 flex gap-2 z-30">
                  <span className="bg-[#5bf4de]/90 text-[#080e1c] text-[9px] font-black px-2 py-1 rounded shadow-lg">LIVE SIMULATION</span>
@@ -272,69 +253,43 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* RIGHT COLUMN: CV INTELLIGENCE UNIT */}
+          {/* RIGHT COLUMN */}
           <div className="md:col-span-4 flex flex-col">
             <div className="p-6 rounded-[16px] border border-[#424858]/20 flex flex-col h-full" style={{ backgroundColor: theme.surface }}>
-              
               <div className="flex justify-between items-center mb-6">
                 <h3 className="font-bold">CV Intelligence</h3>
                 <div className="relative flex items-center group cursor-pointer">
                   <span className="material-symbols-outlined text-[#5bf4de] group-hover:scale-110 transition-transform">post_add</span>
                 </div>
               </div>
-
               <div className="relative rounded-xl overflow-hidden aspect-[4/3] bg-black border border-[#424858]/30 mb-6 group">
                 {hasDraft ? (
                   <>
-                    <img 
-                      src={cvDraftPic} 
-                      className="absolute inset-0 w-full h-full object-cover blur-[1px] opacity-50 group-hover:scale-105 transition-transform duration-700" 
-                      alt="CV Draft Preview"
-                    />
+                    <img src={cvDraftPic} className="absolute inset-0 w-full h-full object-cover blur-[1px] opacity-50 group-hover:scale-105 transition-transform duration-700" alt="CV Draft Preview" />
                     <div className="absolute inset-0 bg-black/40 z-10"></div>
                     <div className="absolute inset-0 flex items-center justify-center z-20">
-                      <button className="flex items-center gap-2 px-5 py-2 bg-[#080e1c] border border-[#5bf4de]/30 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-all hover:border-[#5bf4de]">
-                        <span className="material-symbols-outlined text-base text-[#5bf4de]">search</span>
-                        Preview Current Draft
-                      </button>
+                      <button className="flex items-center gap-2 px-5 py-2 bg-[#080e1c] border border-[#5bf4de]/30 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-all hover:border-[#5bf4de]"><span className="material-symbols-outlined text-base text-[#5bf4de]">search</span>Preview Current Draft</button>
                     </div>
                   </>
                 ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 text-[#a5abbd]">
-                    <span className="material-symbols-outlined text-4xl mb-3 opacity-20">cloud_upload</span>
-                    <p className="font-bold text-xs">Upload Your CV</p>
-                  </div>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 text-[#a5abbd]"><span className="material-symbols-outlined text-4xl mb-3 opacity-20">cloud_upload</span><p className="font-bold text-xs">Upload Your CV</p></div>
                 )}
               </div>
-
               <div className="space-y-6 flex-1">
                 <div className="bg-black/30 border-l-2 border-[#5bf4de] p-4 rounded-r-lg">
-                  <p className="text-xs italic text-[#e0e5f9] leading-relaxed">
-                    "Your CV is missing keyword density for 'Cloud Architecture'. Consider adding specific AWS certifications."
-                  </p>
-                  <div className="mt-2 flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#5bf4de]"></div>
-                    <span className="text-[9px] font-black text-[#5bf4de] uppercase">AI Suggestion</span>
-                  </div>
+                  <p className="text-xs italic text-[#e0e5f9] leading-relaxed">"Your CV is missing keyword density for 'Cloud Architecture'. Consider adding specific AWS certifications."</p>
+                  <div className="mt-2 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-[#5bf4de]"></div><span className="text-[9px] font-black text-[#5bf4de] uppercase">AI Suggestion</span></div>
                 </div>
-
                 <div>
                   <h4 className="text-[10px] font-black uppercase text-[#a5abbd] mb-4 tracking-widest">Top Suggestions</h4>
                   <ul className="space-y-4">
                     {mockData.cvSuggestions.map((text, i) => (
-                      <li key={i} className="flex items-start gap-3 text-xs text-[#e0e5f9] group cursor-pointer">
-                        <span className="material-symbols-outlined text-[#5bf4de] text-sm mt-0.5 group-hover:scale-125 transition-transform">check_circle</span>
-                        <span className="group-hover:text-white transition-colors">{text}</span>
-                      </li>
+                      <li key={i} className="flex items-start gap-3 text-xs text-[#e0e5f9] group cursor-pointer"><span className="material-symbols-outlined text-[#5bf4de] text-sm mt-0.5 group-hover:scale-125 transition-transform">check_circle</span><span className="group-hover:text-white transition-colors">{text}</span></li>
                     ))}
                   </ul>
                 </div>
-
-                <button className="w-full py-3 mt-auto border border-[#5bf4de]/30 rounded-lg text-[#5bf4de] text-[10px] font-black uppercase hover:bg-[#5bf4de]/10 transition-all">
-                  Edit Resume
-                </button>
+                <button className="w-full py-3 mt-auto border border-[#5bf4de]/30 rounded-lg text-[#5bf4de] text-[10px] font-black uppercase hover:bg-[#5bf4de]/10 transition-all">Edit Resume</button>
               </div>
-
             </div>
           </div>
 
