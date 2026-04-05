@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import avatarSimulationPic from '../assets/avatarImage.png'; 
 import cvDraftPic from '../assets/fakeCv.png';
 
@@ -37,6 +37,24 @@ const Dashboard = () => {
   };
 
   const [hasDraft, setHasDraft] = useState(true);
+
+  const [profileImg, setProfileImg] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const handlePhotoClick = () => {
+    fileInputRef.current.click(); 
+  };
+
+  const handlePhotoChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImg(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   
   const navItems = [
     { label: 'CV Builder', icon: 'description' },
@@ -114,11 +132,24 @@ const Dashboard = () => {
           {/* LEFT COLUMN */}
           <div className="md:col-span-3 space-y-6">
             <div className="p-6 rounded-[16px] border border-[#424858]/20 flex flex-col items-center text-center" style={{ backgroundColor: theme.surface }}>
-              <div className="relative mb-4">
-                <div className="w-24 h-24 rounded-xl bg-[#1c2a41] flex items-center justify-center border-2 border-[#5bf4de]/20 text-3xl font-black text-[#5bf4de]">
-                  AR
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handlePhotoChange} 
+                className="hidden" 
+                accept="image/*" 
+              />
+              <div className="relative mb-4 group cursor-pointer" onClick={handlePhotoClick}>
+                <div className="w-24 h-24 rounded-xl bg-[#1c2a41] flex items-center justify-center border-2 border-[#5bf4de]/20 text-3xl font-black text-[#5bf4de] overflow-hidden transition-all group-hover:border-[#5bf4de]/60">
+                  {profileImg ? (
+                    <img src={profileImg} alt="profile" className="w-full h-full object-cover" />
+                  ) : (
+                    "AR"
+                  )}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-xl">
+                    <span className="material-symbols-outlined text-white text-2xl">photo_camera</span>
+                  </div>
                 </div>
-                <div className="absolute -bottom-2 right-0 bg-[#5bf4de] text-[#080e1c] px-2 py-0.5 rounded text-[9px] font-black">VERIFIED</div>
               </div>
               <h2 className="text-xl font-black">{mockData.user.fullName}</h2>
               <p className="text-[#a5abbd] text-xs mb-6">{mockData.user.profession}</p>
