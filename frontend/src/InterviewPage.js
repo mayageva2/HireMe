@@ -3,7 +3,7 @@ import {
   LiveKitRoom, 
   ControlBar, 
   ParticipantTile,
-  AudioConference,
+  RoomAudioRenderer,
   useTracks,
   useTranscriptions,
   GridLayout
@@ -86,7 +86,7 @@ const InterviewPage = ({ token }) => {
             >
             
                 <MyVideoLayout />
-                <AudioConference />
+                <RoomAudioRenderer />
                 <ControlBar controls={{ screenShare: false }} />
                 <LiveTranscription />
         </LiveKitRoom>
