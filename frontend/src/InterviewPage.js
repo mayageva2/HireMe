@@ -53,9 +53,20 @@ function LiveTranscription() {
   );
 }
 
-const InterviewPage = ({ token }) => {
+const InterviewPage = () => {
     const [isStarted, setIsStarted] = useState(false);
     const serverUrl = "wss://hireme-khyjrqi7.livekit.cloud";
+    const queryParams = new URLSearchParams(window.location.search);
+    const token = queryParams.get("token");
+
+    if (!token) {
+        return (
+            <div style={{ textAlign: 'center', marginTop: '100px', color: 'white' }}>
+                <h2>No Session Token Found</h2>
+                <p>Please start the agent in Docker and use the provided link.</p>
+            </div>
+        );
+    }
 
     if (!isStarted) {
         return (

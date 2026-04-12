@@ -11,8 +11,9 @@ Amplify.configure(awsConfig);
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
-  const [view, setView] = useState('dashboard');
-  const [token] = useState("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2aWRlbyI6eyJyb29tSm9pbiI6dHJ1ZSwicm9vbSI6ImludGVydmlldy1yb29tIiwiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuU3Vic2NyaWJlIjp0cnVlLCJjYW5QdWJsaXNoRGF0YSI6dHJ1ZX0sInN1YiI6Ik1heWEiLCJpc3MiOiJBUElEVmY1WmNqTnBnek4iLCJuYmYiOjE3NzU5NzUzMDEsImV4cCI6MTc3NTk5NjkwMX0.myyVaBg3xBWTLlFNYvULvr_RvEtKOjG6_yczWkaeNd0");
+  const queryParams = new URLSearchParams(window.location.search);
+  const hasToken = queryParams.has("token");
+  const [view, setView] = useState(hasToken ? 'interview' : 'dashboard');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -61,7 +62,7 @@ function App() {
           onStartInterview={() => setView('interview')}
         />
       ) : (
-        <InterviewPage token={token} onBack={() => setView('dashboard')} />
+        <InterviewPage onBack={() => setView('dashboard')} />
       )}
     </>
   );

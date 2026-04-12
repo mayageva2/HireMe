@@ -163,7 +163,7 @@ async def entrypoint(ctx: JobContext):
    
 
 def generate_debug_url():
-    url = os.getenv("LIVEKIT_URL").replace("wss://", "https://")
+    base_url = "http://localhost:3000"
     api_key = os.getenv("LIVEKIT_API_KEY")
     api_secret = os.getenv("LIVEKIT_API_SECRET")
     
@@ -174,8 +174,8 @@ def generate_debug_url():
         .to_jwt()
     )
     
-    print(f"\n--- DEBUG URL FOR AVA ---")
-    print(f"{url}/?access_token={token}")
+    print(f"\nHIREME INTERVIEW READY:")
+    print(f"{base_url}/?token={token}")
     print(f"--------------------------\n")
 
 async def main():
