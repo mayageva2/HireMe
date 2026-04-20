@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
 import { Amplify } from 'aws-amplify';
-import { Login, SignUp } from './AuthComponents';
-
-// קונפיגורציה חיצונית למניעת לולאות טעינה
+import { awsConfig } from './aws-config';
 Amplify.configure({
     Auth: {
         Cognito: {
             userPoolId: 'us-east-1_u56lBJUdL',
-            userPoolClientId: 'sb893tp11fni580ojjfpp9u52', // ודאי שזה ה-Public ID החדש
+            userPoolClientId: 'sb893tp11fni580ojjfpp9u52', // <--- זה ה-App Client ID
             region: 'us-east-1' 
         }
     }
 });
+import { Login, SignUp } from './AuthComponents';
+
 
 const GlobalStyle = createGlobalStyle`
   * { margin: 0; padding: 0; box-sizing: border-box; }

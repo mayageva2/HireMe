@@ -100,8 +100,8 @@ export const SignUp = ({ onSwitch }) => {
         options: { 
           userAttributes: { 
             email,
-            name: username, // תיקון השגיאה שקיבלת - שליחת שם חובה
-            given_name: username 
+            name: username,
+            given_name: username
           } 
         }
       });
