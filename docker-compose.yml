@@ -1,0 +1,14 @@
+services:
+  agent:
+    build: 
+      context: ./hireme-agent
+      dockerfile: Dockerfile
+    environment:
+      - LIVEKIT_URL=wss://hireme-khyjrqi7.livekit.cloud
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - SIMLI_API_KEY=${SIMLI_API_KEY}
+      - SIMLI_FACE_ID=${SIMLI_FACE_ID}
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}  
+      - CARTESIA_API_KEY=${CARTESIA_API_KEY}  

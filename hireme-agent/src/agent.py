@@ -4,7 +4,7 @@ import asyncio
 
 from dotenv import load_dotenv
 from livekit import rtc, api
-from livekit.plugins import simli, deepgram, cartesia, google
+from livekit.plugins import simli, deepgram, cartesia, google, openai
 from livekit.agents import (
     Agent,
     AgentServer,
@@ -55,60 +55,39 @@ def prewarm(proc: JobProcess):
 server.setup_fnc = prewarm
 
 @server.rtc_session(agent_name="my-agent")
-async def my_agent(ctx: JobContext):
+async def entrypoint(ctx: JobContext):
     # Logging setup
     print(f"--- DEBUG: Agent received request for room: {ctx.room.name} ---")
-    if ctx.room.name != "interview-room":
-        print(f"--- INFO: Ignoring room {ctx.room.name}, waiting for interview-room ---")
-        return
     ctx.log_context_fields = {
         "room": ctx.room.name,
     }
 
     # Set up a voice AI pipeline using OpenAI, Cartesia, Deepgram, and the LiveKit turn detector
     session = AgentSession(
-        # Speech-to-text (STT) is your agent's ears, turning the user's speech into text that the LLM can understand
-        # See all available models at https://docs.livekit.io/agents/models/stt/
         stt=deepgram.STT(),
-        # A Large Language Model (LLM) is your agent's brain, processing user input and generating a response
-        # See all available models at https://docs.livekit.io/agents/models/llm/
         llm = google.LLM(
             model="gemini-2.5-flash",
             api_key=os.getenv("GOOGLE_API_KEY")
         ),
-        # Text-to-speech (TTS) is your agent's voice, turning the LLM's text into speech that the user can hear
-        # See all available models as well as voice selections at https://docs.livekit.io/agents/models/tts/
         tts=cartesia.TTS(voice="f786b574-daa5-4673-aa0c-cbe3e8534c02"),
-        # VAD and turn detection are used to determine when the user is speaking and when the agent should respond
-        # See more at https://docs.livekit.io/agents/build/turns
         turn_detection=MultilingualModel(),
         vad=ctx.proc.userdata["vad"],
-        # allow the LLM to generate a response while waiting for the end of turn
-        # See more at https://docs.livekit.io/agents/build/audio/#preemptive-generation
         preemptive_generation=True,
     )
-
-    # To use a realtime model instead of a voice pipeline, use the following session setup instead.
-    # (Note: This is for the OpenAI Realtime API. For other providers, see https://docs.livekit.io/agents/models/realtime/))
-    # 1. Install livekit-agents[openai]
-    # 2. Set OPENAI_API_KEY in .env.local
-    # 3. Add `from livekit.plugins import openai` to the top of this file
-    # 4. Use the following session setup instead of the version above
-    # session = AgentSession(
-    #     llm=openai.realtime.RealtimeModel(voice="marin")
-    # )
-
-    # # Add a virtual avatar to the session, if desired
-    # # For other providers, see https://docs.livekit.io/agents/models/avatar/
-    # avatar = hedra.AvatarSession(
-    #   avatar_id="...",  # See https://docs.livekit.io/agents/models/avatar/plugins/hedra
-    # )
-    # # Start the avatar and wait for it to join
-    # await avatar.start(session, room=ctx.room)
 
     # Join the room and connect to the user
     await ctx.connect()
     print(f"--- DEBUG: Connected to room: {ctx.room.name} ---")
+
+    # Delay for docker networking
+    await asyncio.sleep(1)
+
+    # Starts session before avatar
+    await session.start(
+        agent=Assistant(),
+        room=ctx.room,
+    )
+    print("--- DEBUG: Session started ---")
 
     #connect to simli avatar
     simli_conf = simli.SimliConfig(
@@ -116,52 +95,19 @@ async def my_agent(ctx: JobContext):
         face_id=os.getenv("SIMLI_FACE_ID", ""),
     )
     avatar = simli.AvatarSession(simli_config=simli_conf)
-    await avatar.start(session, room=ctx.room) #activates avatar in room
+    
+    #activates avatar in room
+    try:
+        await avatar.start(session, room=ctx.room)
+        print("--- DEBUG: Simli Avatar joined and active ---")
+    except Exception as e:
+        print(f"--- ERROR: Simli failed to start: {e} ---")
 
     @session.on("start")
     def _on_start():
         asyncio.create_task(session.say("Hello, thank you for joining today. I’ll be asking you a few professional and personal questions to better understand your fit for this teaching role."))
 
-    # Start the session, which initializes the voice pipeline and warms up the models
-    await session.start(
-        agent=Assistant(),
-        room=ctx.room,
-    )
-
 '''
-@server.rtc_session(agent_name="my-agent")
-async def entrypoint(ctx: JobContext):
-    logger.info(f"--- ג'וב התקבל בחדר: {ctx.room.name} ---")
-    
-    # חיבור לחדר
-    await ctx.connect()
-
-     #connect to simli avatar
-    avatar = simli.AvatarSession(
-        api_key=os.getenv("SIMLI_API_KEY"),
-        face_id=os.getenv("SIMLI_FACE_ID"),
-    )
-    await avatar.start(session, room=ctx.room) #activates avatar in room
-
-    # Start the session, which initializes the voice pipeline and warms up the models
-    await session.start(
-        agent=Assistant(),
-        room=ctx.room,
-        room_options=room_io.RoomOptions(
-            audio_input=room_io.AudioInputOptions(
-                noise_cancellation=lambda params: (
-                    noise_cancellation.BVCTelephony()
-                    if params.participant.kind
-                    == rtc.ParticipantKind.PARTICIPANT_KIND_SIP
-                    else noise_cancellation.BVC()
-                ),
-            ),
-        ),
-    )
-'''
-    
-   
-
 def generate_debug_url():
     base_url = "http://localhost:3000"
     api_key = os.getenv("LIVEKIT_API_KEY")
@@ -174,25 +120,63 @@ def generate_debug_url():
         .to_jwt()
     )
     
-    print(f"\nHIREME INTERVIEW READY:")
-    print(f"{base_url}/?token={token}")
-    print(f"--------------------------\n")
+    print(f"\nHIREME INTERVIEW READY:", flush=True)
+    print(f"{base_url}/?token={token}", flush=True)
+    print(f"--------------------------\n", flush=True)
+'''
 
 async def main():
-    # It uses LIVEKIT_API_KEY/SECRET from your .env automatically
-    async with api.LiveKitAPI() as lkapi:
+    url = os.getenv("LIVEKIT_URL")
+    api_key = os.getenv("LIVEKIT_API_KEY")
+    api_secret = os.getenv("LIVEKIT_API_SECRET")
+
+    async with api.LiveKitAPI(url, api_key, api_secret) as lkapi:
         await lkapi.agent_dispatch.create_dispatch(
             api.CreateAgentDispatchRequest(
                 agent_name="my-agent",
                 room="interview-room"
             )
         )
-        print("Dispatch sent! Check your agent terminal.")
+        print("Dispatch sent! Your Docker agent should now start the session.")
+
+def on_worker_registered(worker):
+    api_key = os.getenv("LIVEKIT_API_KEY")
+    api_secret = os.getenv("LIVEKIT_API_SECRET")
+    if api_key and api_secret:
+        generate_debug_url()
+    else:
+        logger.warning("LIVEKIT_API_KEY or SECRET not set; cannot generate URL.")
 
 if __name__ == "__main__":
-    asyncio.run(main())
-    generate_debug_url()
-    cli.run_app(server)
+    import sys
+    import threading
+    import time
+
+    # Create the CLI object
+    if len(sys.argv) > 1 and sys.argv[1] == "dispatch":
+        print("--- Manually triggering agent dispatch to interview-room ---")
+        asyncio.run(main())
+        sys.exit(0)
+
+    # Function to print the URL after a short delay so it appears after the worker starts
+    def delayed_url():
+        time.sleep(5) # Wait for worker to initialize
+        api_key = os.getenv("LIVEKIT_API_KEY")
+        api_secret = os.getenv("LIVEKIT_API_SECRET")
+        if api_key and api_secret:
+            generate_debug_url()
+
+    # Only run the debug URL if we are starting the agent (not downloading files)
+    if len(sys.argv) > 1 and sys.argv[1] == "dev":
+        threading.Thread(target=delayed_url, daemon=True).start()
+
+    cli.run_app(
+        WorkerOptions(
+            entrypoint_fnc=entrypoint,
+            agent_name="my-agent", 
+            prewarm_fnc=prewarm,
+        )
+    )
 
 
     

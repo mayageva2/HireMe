@@ -53,17 +53,16 @@ function LiveTranscription() {
   );
 }
 
-const InterviewPage = () => {
+const InterviewPage = ({ token, onBack }) => {
     const [isStarted, setIsStarted] = useState(false);
     const serverUrl = "wss://hireme-khyjrqi7.livekit.cloud";
-    const queryParams = new URLSearchParams(window.location.search);
-    const token = queryParams.get("token");
 
     if (!token) {
         return (
             <div style={{ textAlign: 'center', marginTop: '100px', color: 'white' }}>
                 <h2>No Session Token Found</h2>
-                <p>Please start the agent in Docker and use the provided link.</p>
+                <p>Waiting for the Lambda/Manual token to arrive...</p>
+                <button onClick={onBack} style={{marginTop: '20px'}}>Go Back</button>
             </div>
         );
     }
@@ -91,8 +90,8 @@ const InterviewPage = () => {
                 token={token}
                 serverUrl={serverUrl}
                 connect={true}
-                data-lk-theme="default"
-                onConnected={() => console.log("Connected!")}
+                metadata={JSON.stringify({ agent_name: "my-agent" })} 
+                onConnected={() => console.log("Frontend joined!")}
                 onError={(err) => console.error("Room Error:", err)}
             >
             

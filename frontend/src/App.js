@@ -11,15 +11,13 @@ Amplify.configure(awsConfig);
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
-  const queryParams = new URLSearchParams(window.location.search);
-  const hasToken = queryParams.has("token");
-  const [view, setView] = useState(hasToken ? 'interview' : 'dashboard');
+  const [roomToken, setRoomToken] = useState(null); // State to store the LiveKit token
+  const [view, setView] = useState('dashboard');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkUser = async () => {
       try {
-        // Assuming your authService has a getCurrentUser method
         const user = await authService.getCurrentUser(); 
         if (user) {
           setUserProfile(user);
@@ -34,6 +32,32 @@ function App() {
 
     checkUser();
   }, []);
+
+  // handle automatic activation
+  const handleStartInterview = async () => {
+    setIsLoading(true);
+    try {
+      // Fetch the token from your Lambda (via API Gateway)
+      const response = await fetch('https://iexzogfkyuunk7b5sunmodusay0whgku.lambda-url.us-east-1.on.aws/');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch token');
+      }
+
+      const data = await response.json();
+      
+      // Save the token in state
+      setRoomToken(data.token);
+      
+      // Switch to the interview view
+      setView('interview');
+    } catch (err) {
+      console.error("Error starting interview:", err);
+      alert("Could not connect to the avatar service. Please ensure the backend is running.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLoginSuccess = (profile) => {
     setUserProfile(profile);
@@ -59,10 +83,13 @@ function App() {
       {view === 'dashboard' ? (
         <Dashboard 
           user={userProfile} 
-          onStartInterview={() => setView('interview')}
+          onStartInterview={handleStartInterview} 
         />
       ) : (
-        <InterviewPage onBack={() => setView('dashboard')} />
+        <InterviewPage 
+          token={roomToken} 
+          onBack={() => setView('dashboard')} 
+        />
       )}
     </>
   );
