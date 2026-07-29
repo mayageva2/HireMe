@@ -14,3 +14,5 @@ services:
       - SIMLI_FACE_ID=${SIMLI_FACE_ID}
       - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}  
       - CARTESIA_API_KEY=${CARTESIA_API_KEY}  
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - DYNAMODB_TABLE=${DYNAMODB_TABLE:-HireMe_Table}

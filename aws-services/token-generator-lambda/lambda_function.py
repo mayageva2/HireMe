@@ -26,20 +26,25 @@ def _parse_context(event: dict) -> dict:
     return {
         "name": data.get("name") or query.get("name") or "Candidate",
         "role": data.get("role") or query.get("role") or "General Position",
+        "user_id": data.get("userId") or data.get("user_id") or query.get("userId") or "",
+        "sort_key": data.get("sortKey") or data.get("sort_key") or query.get("sortKey") or "",
     }
 
 
-async def _mint_interview_token(name: str, role: str) -> dict:
+async def _mint_interview_token(name: str, role: str, user_id: str, sort_key: str) -> dict:
     livekit_url = os.environ["LIVEKIT_URL"]
     api_key = os.environ["LIVEKIT_API_KEY"]
     api_secret = os.environ["LIVEKIT_API_SECRET"]
 
     room_name = f"interview-{uuid.uuid4().hex[:8]}"
+    # user_id travels to the agent so it knows which DynamoDB row to write the feedback to.
     metadata = json.dumps(
         {
             "agent_name": "my-agent",
             "name": name,
             "role": role,
+            "user_id": user_id,
+            "sort_key": sort_key,
         }
     )
 
@@ -85,7 +90,11 @@ def lambda_handler(event, context):
 
     try:
         ctx = _parse_context(event)
-        result = asyncio.run(_mint_interview_token(ctx["name"], ctx["role"]))
+        result = asyncio.run(
+            _mint_interview_token(
+                ctx["name"], ctx["role"], ctx["user_id"], ctx["sort_key"]
+            )
+        )
         return {
             "statusCode": 200,
             "headers": CORS_HEADERS,

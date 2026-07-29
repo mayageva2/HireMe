@@ -7,6 +7,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: resolve(__dirname, '../.env') })
 
 const DB_PATH = resolve(__dirname, '../dev_cv_db.json')
+// Written by the local agent when INTERVIEW_FEEDBACK_SINK=file (DynamoDB in production).
+const INTERVIEWS_DB_PATH = resolve(__dirname, '../dev_interviews_db.json')
 
 const getMockPolishedText = (text) => {
   if (!text || text.trim().length === 0) return "Developed and optimized scalable web applications.";
@@ -282,6 +284,35 @@ function loadDatabase() {
   }
 }
 
+function loadInterviews(username, includeTranscript) {
+  if (!fs.existsSync(INTERVIEWS_DB_PATH)) return []
+  let db = {}
+  try {
+    db = JSON.parse(fs.readFileSync(INTERVIEWS_DB_PATH, 'utf8') || '{}')
+  } catch (err) {
+    console.error('Failed to read local dev interviews DB:', err)
+    return []
+  }
+
+  const sessions = Array.isArray(db[username]) ? db[username] : []
+  return sessions
+    .slice()
+    .reverse()
+    .slice(0, 20)
+    .map((session) => ({
+      id: session.sortKey,
+      room: session.room,
+      role: session.role,
+      candidateName: session.candidateName,
+      startedAt: session.startedAt,
+      endedAt: session.endedAt,
+      durationSeconds: session.durationSeconds,
+      turnCount: session.turnCount,
+      feedback: session.feedback,
+      ...(includeTranscript ? { transcript: session.transcript } : {}),
+    }))
+}
+
 function saveDatabase(db) {
   try {
     fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2), 'utf8')
@@ -322,8 +353,16 @@ export function devCvServicePlugin() {
         const isAnalyze = req.url.startsWith('/api/cv/analyze')
         const isPolish = req.url.startsWith('/api/cv/polish')
         const isImport = req.url.startsWith('/api/cv/import')
+        const isInterviews = req.url.startsWith('/api/cv/interviews')
  
         try {
+          if (req.method === 'GET' && isInterviews) {
+            const includeTranscript = /[?&]full=1/.test(req.url)
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ interviews: loadInterviews(username, includeTranscript) }))
+            return
+          }
+
           if (req.method === 'GET') {
             const db = loadDatabase()
             const userData = db[username] || { cv: null, analysis: null }

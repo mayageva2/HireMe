@@ -10,6 +10,7 @@ import {
   useLocalParticipant,
   useRemoteParticipants,
   useTracks,
+  useRoomContext,
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
 import '@livekit/components-styles';
@@ -201,7 +202,43 @@ function MicGateWhileAgentSpeaks() {
   return null;
 }
 
-const InterviewPage = ({ token, avatarContext, onBack, onLogout }) => {
+/** Leaves the room so the agent's shutdown hook runs and writes the feedback report. */
+function EndInterviewButton({ onEnd }) {
+  const room = useRoomContext();
+  const [isEnding, setIsEnding] = useState(false);
+
+  const handleEnd = async () => {
+    setIsEnding(true);
+    try {
+      await room?.disconnect();
+    } catch (err) {
+      console.warn('Disconnect failed, continuing to feedback:', err);
+    }
+    onEnd();
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleEnd}
+      disabled={isEnding}
+      style={{
+        padding: '12px 24px',
+        fontSize: '15px',
+        fontWeight: 700,
+        cursor: isEnding ? 'wait' : 'pointer',
+        backgroundColor: '#5bf4de',
+        color: '#080e1c',
+        border: 'none',
+        borderRadius: '8px',
+      }}
+    >
+      {isEnding ? 'Ending…' : 'End Interview & Get Feedback'}
+    </button>
+  );
+}
+
+const InterviewPage = ({ token, avatarContext, onBack, onLogout, onFinish }) => {
     const [isStarted, setIsStarted] = useState(false);
     const [connectionError, setConnectionError] = useState(null);
     const serverUrl = LIVEKIT_URL;
@@ -308,7 +345,10 @@ const InterviewPage = ({ token, avatarContext, onBack, onLogout }) => {
                 <MicGateWhileAgentSpeaks />
                 <InterviewVideoLayout />
                 <AvatarAudioPlayback />
-                <ControlBar controls={{ screenShare: false }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                  <ControlBar controls={{ screenShare: false }} />
+                  {onFinish && <EndInterviewButton onEnd={onFinish} />}
+                </div>
                 <LiveTranscription />
         </LiveKitRoom>
         </div>
