@@ -66,12 +66,25 @@ Lambda even when built on macOS:
 bash scripts/package_lambdas.sh
 ```
 
-## 4. Create the infrastructure
+## Deploy to a different AWS account
+
+Do not run this while signed in to the Academy lab. The script refuses
+account `590183800076`.
 
 ```bash
-terraform init
-terraform fmt -recursive
-terraform validate
+aws sts get-caller-identity
+cd terraform
+bash scripts/create_remote_state.sh
+```
+
+The script creates an S3 bucket and DynamoDB lock table, then prints a
+`backend "s3"` block. Paste that block into `versions.tf` inside `terraform { }`.
+
+```bash
+cp terraform.tfvars.example terraform.tfvars
+# set LiveKit keys and GitHub token if you want Amplify auto-connect
+bash scripts/package_lambdas.sh
+terraform init -reconfigure
 terraform plan
 terraform apply
 ```
