@@ -1,33 +1,3 @@
-variable "name_prefix" {
-  type = string
-}
-
-variable "lambda_invoke_arns" {
-  type = map(string)
-}
-
-variable "lambda_function_names" {
-  type = map(string)
-}
-
-variable "cognito_issuer" {
-  type = string
-}
-
-variable "cognito_client_id" {
-  type = string
-}
-
-variable "allowed_origins" {
-  type    = list(string)
-  default = ["*"]
-}
-
-variable "tags" {
-  type    = map(string)
-  default = {}
-}
-
 locals {
   routes = {
     "ANY /api/cv"             = { function = "cv-service", auth = true }
@@ -123,16 +93,4 @@ resource "aws_lambda_permission" "api_gateway" {
   function_name = each.value
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.this.execution_arn}/*/*"
-}
-
-output "api_id" {
-  value = aws_apigatewayv2_api.this.id
-}
-
-output "api_endpoint" {
-  value = aws_apigatewayv2_api.this.api_endpoint
-}
-
-output "api_domain_name" {
-  value = replace(aws_apigatewayv2_api.this.api_endpoint, "https://", "")
 }

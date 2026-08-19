@@ -13,6 +13,9 @@ project document:
 - `modules/amplify`: Amplify app that hosts the React SPA and rewrites `/api/*`
   to API Gateway, matching the current lab.
 
+Each module has `main.tf`, `variables.tf`, and `outputs.tf`. The root module
+uses the same split (`main.tf`, `variables.tf`, `outputs.tf`, `providers.tf`).
+
 Amazon Transcribe is an API consumed by backend code, not a persistent
 resource that Terraform creates. The audio bucket is ready for recordings and
 transcription jobs. The current application agent uses LiveKit/Deepgram for

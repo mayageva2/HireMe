@@ -1,12 +1,3 @@
-variable "name_prefix" {
-  type = string
-}
-
-variable "tags" {
-  type    = map(string)
-  default = {}
-}
-
 resource "aws_cognito_user_pool" "this" {
   name = "${var.name_prefix}-users"
 
@@ -75,16 +66,4 @@ resource "aws_cognito_user_pool_client" "web" {
     id_token      = "hours"
     refresh_token = "days"
   }
-}
-
-output "user_pool_id" {
-  value = aws_cognito_user_pool.this.id
-}
-
-output "user_pool_arn" {
-  value = aws_cognito_user_pool.this.arn
-}
-
-output "user_pool_client_id" {
-  value = aws_cognito_user_pool_client.web.id
 }

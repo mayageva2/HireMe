@@ -1,32 +1,3 @@
-variable "name_prefix" {
-  type = string
-}
-
-variable "enable_cloudfront" {
-  type = bool
-}
-
-variable "frontend_bucket_id" {
-  type = string
-}
-
-variable "frontend_bucket_arn" {
-  type = string
-}
-
-variable "frontend_bucket_regional_domain_name" {
-  type = string
-}
-
-variable "api_domain_name" {
-  type = string
-}
-
-variable "tags" {
-  type    = map(string)
-  default = {}
-}
-
 # Always configure the S3 website. AWS Academy uses this instead of CloudFront.
 resource "aws_s3_bucket_website_configuration" "frontend" {
   bucket = var.frontend_bucket_id
@@ -186,20 +157,4 @@ data "aws_iam_policy_document" "frontend" {
 resource "aws_s3_bucket_policy" "frontend" {
   bucket = var.frontend_bucket_id
   policy = data.aws_iam_policy_document.frontend.json
-}
-
-output "website_endpoint" {
-  value = aws_s3_bucket_website_configuration.frontend.website_endpoint
-}
-
-output "distribution_id" {
-  value = var.enable_cloudfront ? aws_cloudfront_distribution.this[0].id : ""
-}
-
-output "domain_name" {
-  value = var.enable_cloudfront ? aws_cloudfront_distribution.this[0].domain_name : aws_s3_bucket_website_configuration.frontend.website_endpoint
-}
-
-output "url" {
-  value = var.enable_cloudfront ? "https://${aws_cloudfront_distribution.this[0].domain_name}" : "http://${aws_s3_bucket_website_configuration.frontend.website_endpoint}"
 }

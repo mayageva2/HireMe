@@ -1,43 +1,3 @@
-variable "name_prefix" {
-  type = string
-}
-
-variable "api_endpoint" {
-  type = string
-}
-
-variable "environment_variables" {
-  type    = map(string)
-  default = {}
-}
-
-variable "connect_repository" {
-  description = "Attach the GitHub repo and create the branch. Requires github_access_token."
-  type        = bool
-  default     = false
-}
-
-variable "github_repository" {
-  type    = string
-  default = ""
-}
-
-variable "github_access_token" {
-  type      = string
-  default   = ""
-  sensitive = true
-}
-
-variable "branch_name" {
-  type    = string
-  default = "may-dev"
-}
-
-variable "tags" {
-  type    = map(string)
-  default = {}
-}
-
 locals {
   api = trimsuffix(var.api_endpoint, "/")
 
@@ -165,16 +125,4 @@ resource "aws_amplify_branch" "this" {
   enable_auto_build     = true
   framework             = "Web"
   environment_variables = var.environment_variables
-}
-
-output "app_id" {
-  value = aws_amplify_app.this.id
-}
-
-output "default_domain" {
-  value = aws_amplify_app.this.default_domain
-}
-
-output "branch_url" {
-  value = var.connect_repository ? "https://${var.branch_name}.${aws_amplify_app.this.default_domain}" : "https://${aws_amplify_app.this.default_domain}"
 }
