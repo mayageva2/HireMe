@@ -1,0 +1,18 @@
+aws_region  = "us-east-1"
+aws_profile = "default"
+
+project_name = "hireme"
+environment  = "lab"
+
+# AWS Academy normally provides this existing role. If your lab uses another
+# role, set lambda_role_arn to its full ARN instead.
+academy_role_name = "LabRole"
+lambda_role_arn   = null
+
+livekit_url        = "wss://your-project.livekit.cloud"
+livekit_api_key    = "replace-me"
+livekit_api_secret = "replace-me"
+
+# Optional: leave empty to use the CV service's mock fallback.
+openai_api_key = ""
+openai_model   = "gpt-4.1-mini"

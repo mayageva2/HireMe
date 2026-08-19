@@ -7,9 +7,7 @@ const HRFlashcards = () => {
     const [flipped, setFlipped] = useState(false);
 
     useEffect(() => {
-        const URL = "https://id3damfismgqoirfaedeymaqfi0yueim.lambda-url.us-east-1.on.aws/";
-
-        fetch(URL)
+        fetch('/api/hr-flashcards')
             .then(res => res.json())
             .then(data => {
                 setQuestions(data);
