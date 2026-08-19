@@ -17,7 +17,7 @@ module "storage" {
   source = "./modules/storage"
 
   name_prefix    = local.name_prefix
-  public_website = !var.enable_cloudfront
+  public_website = !var.enable_cloudfront && !var.enable_amplify
   tags           = local.common_tags
 }
 
@@ -104,13 +104,33 @@ module "api_gateway" {
 }
 
 module "cdn" {
+  count  = var.enable_cloudfront ? 1 : 0
   source = "./modules/cdn"
 
   name_prefix                          = local.name_prefix
-  enable_cloudfront                    = var.enable_cloudfront
+  enable_cloudfront                    = true
   frontend_bucket_id                   = module.storage.frontend_bucket_id
   frontend_bucket_arn                  = module.storage.frontend_bucket_arn
   frontend_bucket_regional_domain_name = module.storage.frontend_bucket_regional_domain_name
   api_domain_name                      = module.api_gateway.api_domain_name
   tags                                 = local.common_tags
+}
+
+module "amplify" {
+  count  = var.enable_amplify ? 1 : 0
+  source = "./modules/amplify"
+
+  name_prefix         = local.name_prefix
+  api_endpoint        = module.api_gateway.api_endpoint
+  github_repository   = var.github_repository
+  github_access_token = var.github_access_token
+  branch_name         = var.amplify_branch_name
+  tags                = local.common_tags
+  environment_variables = {
+    VITE_AWS_REGION                  = var.aws_region
+    VITE_COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    VITE_COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    VITE_LIVEKIT_URL                 = var.livekit_url
+    VITE_HR_FLASHCARDS_URL           = "/api/hr-flashcards"
+  }
 }

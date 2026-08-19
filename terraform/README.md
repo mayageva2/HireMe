@@ -3,15 +3,15 @@
 This root Terraform stack reproduces the serverless architecture from the
 project document:
 
-- `modules/iam`: Lambda execution role (logs, DynamoDB, audio S3, Transcribe).
-  Skip this in AWS Academy with `create_lambda_role = false` and use `LabRole`.
-- `modules/storage`: frontend and audio buckets, app table, HR questions table.
+- `modules/iam`: Lambda execution role. Skip in AWS Academy with
+  `create_lambda_role = false` and use `LabRole`.
+- `modules/storage`: audio bucket, app table, HR questions table.
 - `modules/cognito`: Cognito user pool and browser app client.
 - `modules/lambda`: CV, avatar-context, HR flashcard, and LiveKit token functions.
 - `modules/api_gateway`: HTTP API for `/api/cv`, `/api/avatar-context`,
   `/api/livekit-token`, and `/api/hr-flashcards`.
-- `modules/cdn`: CloudFront in a normal account (same-origin `/api/*`, like
-  Amplify in the lab). S3 website only when `enable_cloudfront = false`.
+- `modules/amplify`: Amplify app that hosts the React SPA and rewrites `/api/*`
+  to API Gateway, matching the current lab.
 
 Amazon Transcribe is an API consumed by backend code, not a persistent
 resource that Terraform creates. The audio bucket is ready for recordings and
@@ -39,8 +39,9 @@ credentials expire whenever the lab session ends; export the new values before
 the next Terraform command.
 
 In a normal AWS account leave the defaults: Terraform creates the Lambda role
-and CloudFront. In AWS Academy set `create_lambda_role = false` and
-`enable_cloudfront = false` so the stack uses `LabRole` and S3 website hosting.
+and an Amplify app. In AWS Academy set `create_lambda_role = false` so the
+stack uses `LabRole`. Do not apply this Amplify app into the existing lab
+account unless you want a second HireMe Amplify app.
 
 ## 2. Configure application values
 
@@ -72,21 +73,9 @@ terraform plan
 terraform apply
 ```
 
-On a normal account CloudFront is created so the SPA can call `/api/*` the
-same way Amplify rewrites do in the lab. After apply, rebuild the frontend
-with `scripts/deploy_frontend.sh` so it uses the new Cognito pool.
-
-## 5. Build and upload the frontend
-
-After `terraform apply`, this script writes the generated Cognito IDs to the
-ignored `frontend/.env.production`, builds React, uploads it to S3, and
-invalidates CloudFront:
-
-```bash
-bash scripts/deploy_frontend.sh
-```
-
-The script prints the final application URL. You can also retrieve it with:
+Amplify hosts the frontend. After apply, connect the GitHub repo in the
+Amplify console (or set `github_access_token`) and push `may-dev`. Amplify
+injects the new Cognito IDs at build time and proxies `/api/*` to API Gateway.
 
 ```bash
 terraform output -raw application_url

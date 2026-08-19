@@ -1,10 +1,20 @@
 output "application_url" {
-  description = "CloudFront HTTPS URL when enable_cloudfront is true, otherwise the S3 website URL."
-  value       = module.cdn.url
+  description = "Amplify URL by default. CloudFront URL only if enable_cloudfront is true."
+  value = var.enable_amplify ? module.amplify[0].branch_url : (
+    var.enable_cloudfront ? module.cdn[0].url : "http://${module.storage.frontend_bucket_id}.s3-website-${var.aws_region}.amazonaws.com"
+  )
+}
+
+output "amplify_app_id" {
+  value = var.enable_amplify ? module.amplify[0].app_id : ""
+}
+
+output "amplify_branch_name" {
+  value = var.amplify_branch_name
 }
 
 output "cloudfront_distribution_id" {
-  value = module.cdn.distribution_id
+  value = var.enable_cloudfront ? module.cdn[0].distribution_id : ""
 }
 
 output "frontend_bucket_name" {
@@ -40,7 +50,7 @@ output "api_endpoint" {
 }
 
 output "frontend_build_environment" {
-  description = "Values to place in frontend/.env.production before npm run build."
+  description = "Values Amplify injects at build time, and deploy_frontend.sh can write locally."
   value = {
     VITE_AWS_REGION                  = var.aws_region
     VITE_COGNITO_USER_POOL_ID        = module.cognito.user_pool_id

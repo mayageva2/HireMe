@@ -26,10 +26,34 @@ variable "create_lambda_role" {
   default     = true
 }
 
-variable "enable_cloudfront" {
-  description = "Put CloudFront in front of S3 and /api/*. Required for another account to behave like Amplify. Set false in AWS Academy."
+variable "enable_amplify" {
+  description = "Host the React app on Amplify with /api rewrites, matching the current lab."
   type        = bool
   default     = true
+}
+
+variable "enable_cloudfront" {
+  description = "Optional S3 + CloudFront hosting. Leave false; Amplify is the lab setup."
+  type        = bool
+  default     = false
+}
+
+variable "github_repository" {
+  description = "GitHub repo URL for Amplify auto-build. Leave empty and connect the repo in the Amplify console."
+  type        = string
+  default     = "https://github.com/MayaandMayOrganization/HireMe"
+}
+
+variable "github_access_token" {
+  description = "GitHub personal access token with repo scope. Leave empty to create the Amplify app without connecting Git."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "amplify_branch_name" {
+  type    = string
+  default = "may-dev"
 }
 
 variable "academy_role_name" {
