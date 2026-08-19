@@ -24,12 +24,8 @@ with open(os.environ["ENV_FILE"], "w", encoding="utf-8") as output:
 )
 
 BUCKET="$(terraform -chdir="${TERRAFORM_DIR}" output -raw frontend_bucket_name)"
-DISTRIBUTION="$(terraform -chdir="${TERRAFORM_DIR}" output -raw cloudfront_distribution_id)"
 
 aws s3 sync "${PROJECT_DIR}/frontend/dist/" "s3://${BUCKET}/" --delete
-aws cloudfront create-invalidation \
-  --distribution-id "${DISTRIBUTION}" \
-  --paths "/*"
 
 terraform -chdir="${TERRAFORM_DIR}" output -raw application_url
 echo

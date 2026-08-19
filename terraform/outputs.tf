@@ -1,10 +1,6 @@
 output "application_url" {
-  description = "CloudFront URL for the HireMe application."
-  value       = "https://${module.cdn.domain_name}"
-}
-
-output "cloudfront_distribution_id" {
-  value = module.cdn.distribution_id
+  description = "S3 website URL. AWS Academy blocks CloudFront; the live lab uses Amplify plus this same S3 website pattern."
+  value       = "http://${module.cdn.website_endpoint}"
 }
 
 output "frontend_bucket_name" {
@@ -17,6 +13,10 @@ output "audio_bucket_name" {
 
 output "dynamodb_table_name" {
   value = module.storage.dynamodb_table_name
+}
+
+output "hr_questions_table_name" {
+  value = module.storage.hr_questions_table_name
 }
 
 output "cognito_user_pool_id" {

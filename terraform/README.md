@@ -3,15 +3,16 @@
 This root Terraform stack reproduces the serverless architecture from the
 project document:
 
-- `modules/storage`: private S3 frontend and audio buckets plus the
-  single-table DynamoDB table.
+- `modules/storage`: public S3 website bucket (matches `hireme-web`), private
+  audio bucket, `HireMe_Table` single-table design, and HR questions table.
 - `modules/cognito`: Cognito user pool and browser app client.
 - `modules/lambda`: CV, avatar-context, HR flashcard, and LiveKit token Lambda
-  functions.
-- `modules/api_gateway`: HTTP API, Cognito JWT authorization for CV routes,
-  CORS, throttling, and access logs.
-- `modules/cdn`: CloudFront in front of private S3, with `/api/*` forwarded to
-  API Gateway.
+  functions, all using the existing Academy `LabRole`.
+- `modules/api_gateway`: HTTP API for `/api/cv`, `/api/avatar-context`,
+  `/api/livekit-token`, and `/api/hr-flashcards`.
+- `modules/cdn`: S3 website hosting. CloudFront is in the architecture diagram
+  but AWS Academy `voclabs` cannot create CloudFront distributions. The live
+  lab frontend is Amplify (`HireMe`) plus the `hireme-web` S3 website.
 
 Amazon Transcribe is an API consumed by backend code, not a persistent
 resource that Terraform creates. The audio bucket is ready for recordings and
@@ -72,7 +73,8 @@ terraform plan
 terraform apply
 ```
 
-CloudFront deployment usually takes several minutes.
+S3 website hosting is used instead of CloudFront because Academy denies
+`cloudfront:CreateDistribution`.
 
 ## 5. Build and upload the frontend
 

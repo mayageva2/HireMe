@@ -29,10 +29,10 @@ resource "aws_s3_bucket_ownership_controls" "frontend" {
 
 resource "aws_s3_bucket_public_access_block" "frontend" {
   bucket                  = aws_s3_bucket.frontend.id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "frontend" {
@@ -112,6 +112,19 @@ resource "aws_dynamodb_table" "main" {
   tags = merge(var.tags, { Name = "${var.name_prefix}-table" })
 }
 
+resource "aws_dynamodb_table" "hr_questions" {
+  name         = "${var.name_prefix}-hr-questions"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  tags = merge(var.tags, { Name = "${var.name_prefix}-hr-questions" })
+}
+
 output "frontend_bucket_id" {
   value = aws_s3_bucket.frontend.id
 }
@@ -138,4 +151,12 @@ output "dynamodb_table_name" {
 
 output "dynamodb_table_arn" {
   value = aws_dynamodb_table.main.arn
+}
+
+output "hr_questions_table_name" {
+  value = aws_dynamodb_table.hr_questions.name
+}
+
+output "hr_questions_table_arn" {
+  value = aws_dynamodb_table.hr_questions.arn
 }

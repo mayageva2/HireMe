@@ -73,7 +73,9 @@ module "lambdas" {
       zip_path    = "${path.root}/.build/hr-flashcards.zip"
       timeout     = 5
       memory_size = 128
-      environment = {}
+      environment = {
+        HR_QUESTIONS_TABLE = module.storage.hr_questions_table_name
+      }
     }
   }
 }
@@ -93,10 +95,8 @@ module "api_gateway" {
 module "cdn" {
   source = "./modules/cdn"
 
-  name_prefix                          = local.name_prefix
-  frontend_bucket_id                   = module.storage.frontend_bucket_id
-  frontend_bucket_arn                  = module.storage.frontend_bucket_arn
-  frontend_bucket_regional_domain_name = module.storage.frontend_bucket_regional_domain_name
-  api_domain_name                      = module.api_gateway.api_domain_name
-  tags                                 = local.common_tags
+  name_prefix         = local.name_prefix
+  frontend_bucket_id  = module.storage.frontend_bucket_id
+  frontend_bucket_arn = module.storage.frontend_bucket_arn
+  tags                = local.common_tags
 }

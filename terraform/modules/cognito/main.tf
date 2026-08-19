@@ -45,17 +45,7 @@ resource "aws_cognito_user_pool" "this" {
     name                = "profession"
     mutable             = true
     string_attribute_constraints {
-      min_length = 0
-      max_length = 256
-    }
-  }
-
-  schema {
-    attribute_data_type = "String"
-    name                = "sortKey"
-    mutable             = true
-    string_attribute_constraints {
-      min_length = 0
+      min_length = 1
       max_length = 256
     }
   }
