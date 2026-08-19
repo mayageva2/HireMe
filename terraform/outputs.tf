@@ -1,6 +1,10 @@
 output "application_url" {
-  description = "S3 website URL. AWS Academy blocks CloudFront; the live lab uses Amplify plus this same S3 website pattern."
-  value       = "http://${module.cdn.website_endpoint}"
+  description = "CloudFront HTTPS URL when enable_cloudfront is true, otherwise the S3 website URL."
+  value       = module.cdn.url
+}
+
+output "cloudfront_distribution_id" {
+  value = module.cdn.distribution_id
 }
 
 output "frontend_bucket_name" {
@@ -17,6 +21,10 @@ output "dynamodb_table_name" {
 
 output "hr_questions_table_name" {
   value = module.storage.hr_questions_table_name
+}
+
+output "lambda_role_arn" {
+  value = module.iam.role_arn
 }
 
 output "cognito_user_pool_id" {
@@ -38,5 +46,6 @@ output "frontend_build_environment" {
     VITE_COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
     VITE_COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
     VITE_LIVEKIT_URL                 = var.livekit_url
+    VITE_HR_FLASHCARDS_URL           = "/api/hr-flashcards"
   }
 }

@@ -4,8 +4,14 @@ aws_profile = "default"
 project_name = "hireme"
 environment  = "lab"
 
-# AWS Academy normally provides this existing role. If your lab uses another
-# role, set lambda_role_arn to its full ARN instead.
+# Normal AWS account: Terraform creates the Lambda role and CloudFront so
+# /api/* works the same way Amplify rewrites work in the lab.
+create_lambda_role = true
+enable_cloudfront  = true
+
+# AWS Academy: IAM role creation and CloudFront are blocked. Use:
+#   create_lambda_role = false
+#   enable_cloudfront  = false
 academy_role_name = "LabRole"
 lambda_role_arn   = null
 

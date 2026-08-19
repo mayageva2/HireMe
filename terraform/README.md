@@ -3,16 +3,15 @@
 This root Terraform stack reproduces the serverless architecture from the
 project document:
 
-- `modules/storage`: public S3 website bucket (matches `hireme-web`), private
-  audio bucket, `HireMe_Table` single-table design, and HR questions table.
+- `modules/iam`: Lambda execution role (logs, DynamoDB, audio S3, Transcribe).
+  Skip this in AWS Academy with `create_lambda_role = false` and use `LabRole`.
+- `modules/storage`: frontend and audio buckets, app table, HR questions table.
 - `modules/cognito`: Cognito user pool and browser app client.
-- `modules/lambda`: CV, avatar-context, HR flashcard, and LiveKit token Lambda
-  functions, all using the existing Academy `LabRole`.
+- `modules/lambda`: CV, avatar-context, HR flashcard, and LiveKit token functions.
 - `modules/api_gateway`: HTTP API for `/api/cv`, `/api/avatar-context`,
   `/api/livekit-token`, and `/api/hr-flashcards`.
-- `modules/cdn`: S3 website hosting. CloudFront is in the architecture diagram
-  but AWS Academy `voclabs` cannot create CloudFront distributions. The live
-  lab frontend is Amplify (`HireMe`) plus the `hireme-web` S3 website.
+- `modules/cdn`: CloudFront in a normal account (same-origin `/api/*`, like
+  Amplify in the lab). S3 website only when `enable_cloudfront = false`.
 
 Amazon Transcribe is an API consumed by backend code, not a persistent
 resource that Terraform creates. The audio bucket is ready for recordings and
@@ -39,9 +38,9 @@ Do not put AWS credentials in `.tf`, `.tfvars`, or Git. Academy session
 credentials expire whenever the lab session ends; export the new values before
 the next Terraform command.
 
-The stack uses the existing Academy `LabRole` by default because Academy
-accounts commonly block IAM role creation. If your lab exposes a different
-role, set `lambda_role_arn` in `terraform.tfvars`.
+In a normal AWS account leave the defaults: Terraform creates the Lambda role
+and CloudFront. In AWS Academy set `create_lambda_role = false` and
+`enable_cloudfront = false` so the stack uses `LabRole` and S3 website hosting.
 
 ## 2. Configure application values
 
@@ -73,8 +72,9 @@ terraform plan
 terraform apply
 ```
 
-S3 website hosting is used instead of CloudFront because Academy denies
-`cloudfront:CreateDistribution`.
+On a normal account CloudFront is created so the SPA can call `/api/*` the
+same way Amplify rewrites do in the lab. After apply, rebuild the frontend
+with `scripts/deploy_frontend.sh` so it uses the new Cognito pool.
 
 ## 5. Build and upload the frontend
 

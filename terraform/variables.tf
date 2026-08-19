@@ -20,14 +20,26 @@ variable "environment" {
   default = "lab"
 }
 
+variable "create_lambda_role" {
+  description = "Create a Lambda execution role. Set false in AWS Academy, which already provides LabRole and blocks IAM role creation."
+  type        = bool
+  default     = true
+}
+
+variable "enable_cloudfront" {
+  description = "Put CloudFront in front of S3 and /api/*. Required for another account to behave like Amplify. Set false in AWS Academy."
+  type        = bool
+  default     = true
+}
+
 variable "academy_role_name" {
-  description = "Existing AWS Academy execution role used when lambda_role_arn is null."
+  description = "Existing AWS Academy execution role used when create_lambda_role is false and lambda_role_arn is null."
   type        = string
   default     = "LabRole"
 }
 
 variable "lambda_role_arn" {
-  description = "Optional execution role ARN. Leave null to look up the AWS Academy LabRole."
+  description = "Optional existing execution role ARN. Used when create_lambda_role is false."
   type        = string
   default     = null
 }

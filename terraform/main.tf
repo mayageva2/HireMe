@@ -1,11 +1,10 @@
 data "aws_iam_role" "academy" {
-  count = var.lambda_role_arn == null ? 1 : 0
+  count = var.create_lambda_role || var.lambda_role_arn != null ? 0 : 1
   name  = var.academy_role_name
 }
 
 locals {
-  name_prefix     = "${lower(var.project_name)}-${lower(var.environment)}"
-  lambda_role_arn = coalesce(var.lambda_role_arn, try(data.aws_iam_role.academy[0].arn, null))
+  name_prefix = "${lower(var.project_name)}-${lower(var.environment)}"
 
   common_tags = {
     Project     = var.project_name
@@ -17,8 +16,20 @@ locals {
 module "storage" {
   source = "./modules/storage"
 
-  name_prefix = local.name_prefix
-  tags        = local.common_tags
+  name_prefix    = local.name_prefix
+  public_website = !var.enable_cloudfront
+  tags           = local.common_tags
+}
+
+module "iam" {
+  source = "./modules/iam"
+
+  name_prefix         = local.name_prefix
+  create              = var.create_lambda_role
+  existing_role_arn   = coalesce(var.lambda_role_arn, try(data.aws_iam_role.academy[0].arn, null))
+  dynamodb_table_arns = [module.storage.dynamodb_table_arn, module.storage.hr_questions_table_arn]
+  audio_bucket_arn    = module.storage.audio_bucket_arn
+  tags                = local.common_tags
 }
 
 module "cognito" {
@@ -32,7 +43,7 @@ module "lambdas" {
   source = "./modules/lambda"
 
   name_prefix = local.name_prefix
-  role_arn    = local.lambda_role_arn
+  role_arn    = module.iam.role_arn
   tags        = local.common_tags
 
   functions = {
@@ -95,8 +106,11 @@ module "api_gateway" {
 module "cdn" {
   source = "./modules/cdn"
 
-  name_prefix         = local.name_prefix
-  frontend_bucket_id  = module.storage.frontend_bucket_id
-  frontend_bucket_arn = module.storage.frontend_bucket_arn
-  tags                = local.common_tags
+  name_prefix                          = local.name_prefix
+  enable_cloudfront                    = var.enable_cloudfront
+  frontend_bucket_id                   = module.storage.frontend_bucket_id
+  frontend_bucket_arn                  = module.storage.frontend_bucket_arn
+  frontend_bucket_regional_domain_name = module.storage.frontend_bucket_regional_domain_name
+  api_domain_name                      = module.api_gateway.api_domain_name
+  tags                                 = local.common_tags
 }

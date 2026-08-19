@@ -2,6 +2,12 @@ variable "name_prefix" {
   type = string
 }
 
+variable "public_website" {
+  description = "Open the frontend bucket for S3 website hosting. Set false when CloudFront OAC is used."
+  type        = bool
+  default     = true
+}
+
 variable "tags" {
   type    = map(string)
   default = {}
@@ -29,10 +35,10 @@ resource "aws_s3_bucket_ownership_controls" "frontend" {
 
 resource "aws_s3_bucket_public_access_block" "frontend" {
   bucket                  = aws_s3_bucket.frontend.id
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
+  block_public_acls       = !var.public_website
+  block_public_policy     = !var.public_website
+  ignore_public_acls      = !var.public_website
+  restrict_public_buckets = !var.public_website
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "frontend" {
@@ -79,6 +85,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "audio" {
   rule {
     id     = "expire-old-recordings"
     status = "Enabled"
+    filter {}
     expiration {
       days = 90
     }
