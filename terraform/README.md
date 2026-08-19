@@ -74,8 +74,9 @@ terraform apply
 ```
 
 Amplify hosts the frontend. After apply, connect the GitHub repo in the
-Amplify console (or set `github_access_token`) and push `may-dev`. Amplify
-injects the new Cognito IDs at build time and proxies `/api/*` to API Gateway.
+Amplify console, or set `connect_github = true` with `github_access_token`, then
+push `may-dev`. Amplify injects the new Cognito IDs at build time and proxies
+`/api/*` to API Gateway.
 
 ```bash
 terraform output -raw application_url

@@ -11,6 +11,12 @@ variable "environment_variables" {
   default = {}
 }
 
+variable "connect_repository" {
+  description = "Attach the GitHub repo and create the branch. Requires github_access_token."
+  type        = bool
+  default     = false
+}
+
 variable "github_repository" {
   type    = string
   default = ""
@@ -88,11 +94,11 @@ locals {
 resource "aws_amplify_app" "this" {
   name                     = var.name_prefix
   platform                 = "WEB"
-  enable_branch_auto_build = var.github_access_token != ""
+  enable_branch_auto_build = var.connect_repository
   build_spec               = local.build_spec
   environment_variables    = var.environment_variables
-  repository               = var.github_access_token != "" && var.github_repository != "" ? var.github_repository : null
-  access_token             = var.github_access_token != "" ? var.github_access_token : null
+  repository               = var.connect_repository ? var.github_repository : null
+  access_token             = var.connect_repository ? var.github_access_token : null
   tags                     = var.tags
 
   custom_rule {
@@ -151,7 +157,7 @@ resource "aws_amplify_app" "this" {
 }
 
 resource "aws_amplify_branch" "this" {
-  count = var.github_access_token != "" ? 1 : 0
+  count = var.connect_repository ? 1 : 0
 
   app_id                = aws_amplify_app.this.id
   branch_name           = var.branch_name
@@ -170,5 +176,5 @@ output "default_domain" {
 }
 
 output "branch_url" {
-  value = var.github_access_token != "" ? "https://${aws_amplify_branch.this[0].branch_name}.${aws_amplify_app.this.default_domain}" : "https://${aws_amplify_app.this.default_domain}"
+  value = var.connect_repository ? "https://${var.branch_name}.${aws_amplify_app.this.default_domain}" : "https://${aws_amplify_app.this.default_domain}"
 }

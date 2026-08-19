@@ -6,6 +6,11 @@ data "aws_iam_role" "academy" {
 locals {
   name_prefix = "${lower(var.project_name)}-${lower(var.environment)}"
 
+  # Only resolved when Terraform is not creating the role itself.
+  existing_lambda_role_arn = var.create_lambda_role ? null : (
+    var.lambda_role_arn != null ? var.lambda_role_arn : data.aws_iam_role.academy[0].arn
+  )
+
   common_tags = {
     Project     = var.project_name
     Environment = var.environment
@@ -26,7 +31,7 @@ module "iam" {
 
   name_prefix         = local.name_prefix
   create              = var.create_lambda_role
-  existing_role_arn   = coalesce(var.lambda_role_arn, try(data.aws_iam_role.academy[0].arn, null))
+  existing_role_arn   = local.existing_lambda_role_arn
   dynamodb_table_arns = [module.storage.dynamodb_table_arn, module.storage.hr_questions_table_arn]
   audio_bucket_arn    = module.storage.audio_bucket_arn
   tags                = local.common_tags
@@ -122,6 +127,7 @@ module "amplify" {
 
   name_prefix         = local.name_prefix
   api_endpoint        = module.api_gateway.api_endpoint
+  connect_repository  = var.connect_github
   github_repository   = var.github_repository
   github_access_token = var.github_access_token
   branch_name         = var.amplify_branch_name

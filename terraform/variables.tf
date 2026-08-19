@@ -5,9 +5,9 @@ variable "aws_region" {
 }
 
 variable "aws_profile" {
-  description = "Local AWS CLI profile. Credentials are never stored in Terraform."
+  description = "Optional AWS CLI profile. Leave empty to use environment credentials such as an Academy lab session."
   type        = string
-  default     = "default"
+  default     = ""
 }
 
 variable "project_name" {
@@ -38,8 +38,14 @@ variable "enable_cloudfront" {
   default     = false
 }
 
+variable "connect_github" {
+  description = "Let Terraform attach the GitHub repo to Amplify. Needs github_access_token. Leave false to connect the repo in the Amplify console instead."
+  type        = bool
+  default     = false
+}
+
 variable "github_repository" {
-  description = "GitHub repo URL for Amplify auto-build. Leave empty and connect the repo in the Amplify console."
+  description = "GitHub repo URL, used only when connect_github is true."
   type        = string
   default     = "https://github.com/MayaandMayOrganization/HireMe"
 }

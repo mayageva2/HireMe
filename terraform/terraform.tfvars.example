@@ -1,5 +1,8 @@
-aws_region  = "us-east-1"
-aws_profile = "default"
+aws_region = "us-east-1"
+
+# Leave empty to use environment credentials (AWS Academy lab session).
+# Set a name only if you keep a named profile in ~/.aws/credentials.
+aws_profile = ""
 
 project_name = "hireme"
 environment  = "lab"
@@ -10,11 +13,12 @@ create_lambda_role = true
 enable_amplify     = true
 enable_cloudfront  = false
 
-# Connect Git so Amplify can auto-build. Leave the token empty to create the
-# Amplify app first and attach the GitHub repo in the AWS console.
-github_repository    = "https://github.com/MayaandMayOrganization/HireMe"
-github_access_token  = ""
-amplify_branch_name  = "may-dev"
+# Set connect_github = true with a token to let Terraform attach the repo and
+# create the branch. Otherwise connect the repo in the Amplify console.
+connect_github      = false
+github_repository   = "https://github.com/MayaandMayOrganization/HireMe"
+github_access_token = ""
+amplify_branch_name = "may-dev"
 
 # AWS Academy: IAM role creation is blocked. Use:
 #   create_lambda_role = false
