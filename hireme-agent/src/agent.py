@@ -290,20 +290,31 @@ async def entrypoint(ctx: JobContext):
                 print(f"--- DEBUG: Only {answers} answer(s); skipping interview feedback ---")
                 return
 
-            print(f"--- DEBUG: Analyzing interview for {user_id} ({answers} answers) ---")
-            feedback = await interview_feedback.analyze_transcript(
-                transcript, name=name, role=role
-            )
             record = interview_feedback.build_record(
                 user_id=user_id,
                 room=ctx.room.name,
                 name=name,
                 role=role,
                 transcript=transcript,
-                feedback=feedback,
+                feedback=interview_feedback.estimate_feedback(transcript, role),
                 started_at=started_at,
                 ended_at=interview_feedback.utc_now_iso(),
             )
+
+            # Store the estimate first: if grading is slow or the process is killed,
+            # the session still has a report instead of disappearing.
+            await interview_feedback.save_record(record)
+            print(f"--- DEBUG: Interview transcript stored: {record['sortKey']} ---")
+
+            print(f"--- DEBUG: Analyzing interview for {user_id} ({answers} answers) ---")
+            feedback = await interview_feedback.analyze_transcript(
+                transcript, name=name, role=role
+            )
+            if feedback.get("isMockFallback"):
+                print("--- DEBUG: Grading unavailable; keeping the estimated report ---")
+                return
+
+            record["feedback"] = feedback
             await interview_feedback.save_record(record)
             print(f"--- DEBUG: Interview feedback stored: {record['sortKey']} ---")
         except Exception as exc:
@@ -355,5 +366,8 @@ if __name__ == "__main__":
             entrypoint_fnc=entrypoint,
             agent_name="my-agent", 
             prewarm_fnc=prewarm,
+            # Interview grading runs in a shutdown callback and calls OpenAI, which
+            # does not fit in the 10s default before the job process is killed.
+            shutdown_process_timeout=60.0,
         )
     )
