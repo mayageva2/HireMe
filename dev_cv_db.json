@@ -327,10 +327,25 @@
           "status": "correct",
           "difficulty": "Beginner",
           "updatedAt": "2026-08-23T16:02:07.481Z"
+        },
+        "r2t3y4u5i6o7p8a9s0d1": {
+          "status": "correct",
+          "difficulty": "Intermediate",
+          "updatedAt": "2026-08-23T16:38:49.042Z"
+        },
+        "a1f3d9b2-4c6e-4f7a-8f2b-5e3c7d9a1b2c": {
+          "status": "correct",
+          "difficulty": "Advanced",
+          "updatedAt": "2026-08-23T16:39:00.972Z"
+        },
+        "b2e4c7f3-9d1a-4e2f-b5a7-3f9d8c1e2b4a": {
+          "status": "incorrect",
+          "difficulty": "Advanced",
+          "updatedAt": "2026-08-23T16:39:03.079Z"
         }
       },
       "activeDifficulty": "Advanced",
-      "performanceScore": 70
+      "performanceScore": 69
     },
     "hrProgress": {
       "history": {

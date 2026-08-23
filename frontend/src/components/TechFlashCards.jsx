@@ -261,7 +261,16 @@ const TechFlashcards = () => {
                         <button 
                             onClick={handleGenerate} 
                             disabled={generating}
-                            className="text-xs text-[#5bf4de] hover:underline uppercase font-black tracking-wider flex items-center gap-1 disabled:opacity-50"
+                            className="text-xs text-[#5bf4de] uppercase font-black tracking-wider flex items-center gap-1 disabled:opacity-50 transition-all duration-300"
+                            style={{ transition: 'all 0.3s ease' }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.filter = 'drop-shadow(0 0 6px #5bf4de)';
+                              e.currentTarget.style.color = '#ffffff';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.filter = 'none';
+                              e.currentTarget.style.color = '#5bf4de';
+                            }}
                         >
                             <span className="material-symbols-outlined text-xs">sync</span>
                             {generating ? 'Regenerating...' : 'Regenerate'}

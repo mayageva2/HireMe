@@ -197,7 +197,16 @@ function App() {
             <div className="min-h-screen bg-[#080e1c] pt-20">
               <button 
                 onClick={() => setMainView('dashboard')}
-                className="ml-10 mb-6 flex items-center gap-2 text-[#5bf4de] hover:text-[#46eedd] font-bold transition-colors"
+                className="ml-10 mb-6 flex items-center gap-2 text-[#5bf4de] font-bold transition-all duration-300"
+                style={{ transition: 'all 0.3s ease' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.filter = 'drop-shadow(0 0 8px #5bf4de)';
+                  e.currentTarget.style.color = '#ffffff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.filter = 'none';
+                  e.currentTarget.style.color = '#5bf4de';
+                }}
               >
                 <span className="material-symbols-outlined">arrow_back</span> Back to Dashboard
               </button>
@@ -207,7 +216,16 @@ function App() {
             <div className="min-h-screen bg-[#080e1c] pt-20">
               <button 
                 onClick={() => setMainView('dashboard')}
-                className="ml-10 mb-6 flex items-center gap-2 text-[#5bf4de] hover:text-[#46eedd] font-bold transition-colors"
+                className="ml-10 mb-6 flex items-center gap-2 text-[#5bf4de] font-bold transition-all duration-300"
+                style={{ transition: 'all 0.3s ease' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.filter = 'drop-shadow(0 0 8px #5bf4de)';
+                  e.currentTarget.style.color = '#ffffff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.filter = 'none';
+                  e.currentTarget.style.color = '#5bf4de';
+                }}
               >
                 <span className="material-symbols-outlined">arrow_back</span> Back to Dashboard
               </button>

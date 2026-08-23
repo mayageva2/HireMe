@@ -315,6 +315,10 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
     }
   };
 
+  const totalReviewed = hrCounts.total + techCounts.total;
+  const totalMastered = hrCounts.correct + techCounts.correct;
+  const globalEfficiency = totalReviewed > 0 ? Math.round((totalMastered / totalReviewed) * 100) : 0;
+
   return (
     <div className="min-h-screen text-[#e0e5f9] font-inter overflow-y-auto" style={{ backgroundColor: theme.background }}>
       <style>{`
@@ -568,29 +572,28 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
             </div>
 
             {/* Flashcard Performance Analytics Card */}
-            <div className="p-6 rounded-[16px] border border-[#424858]/20" style={{ backgroundColor: theme.surface }}>
-              <div className="flex items-center justify-between mb-8 border-b border-[#424858]/10 pb-4">
-                <h3 className="font-bold text-sm uppercase tracking-wider text-[#a5abbd]">Flashcards Progress</h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={onShowHR}
-                    className="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-[#5bf4de] border border-[#5bf4de]/20 rounded-full hover:bg-[#5bf4de]/10 transition-all"
-                  >
+            <div className="p-5 rounded-[16px] border border-[#424858]/20 bg-gradient-to-br from-[#12192a] to-[#162235]" style={{ backgroundColor: theme.surface }}>
+              <div className="flex items-center justify-between mb-5 border-b border-[#424858]/10 pb-3">
+                <div>
+                  <h3 className="font-bold text-xs uppercase tracking-wider text-[#a5abbd]">Flashcards Progress</h3>
+                  <p className="text-[9px] text-[#5bf4de] font-bold mt-0.5 uppercase tracking-wider">
+                    Mastery Overview
+                  </p>
+                </div>
+                <div className="flex gap-1.5">
+                  <button onClick={onShowHR} className="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-[#5bf4de] border border-[#5bf4de]/25 rounded-full hover:bg-[#5bf4de]/10 transition-all">
                     Practice HR
                   </button>
-                  <button
-                    onClick={onShowTech}
-                    className="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-[#5bf4de] border border-[#5bf4de]/20 rounded-full hover:bg-[#5bf4de]/10 transition-all"
-                  >
+                  <button onClick={onShowTech} className="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-[#5bf4de] border border-[#5bf4de]/25 rounded-full hover:bg-[#5bf4de]/10 transition-all">
                     Practice Tech
                   </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* HR Flashcards circular progress */}
-                <div className="flex items-center gap-4 bg-black/25 p-4 rounded-xl border border-[#424858]/10">
-                  <div className="relative w-16 h-16 shrink-0">
+                <div className="flex items-center gap-4 bg-black/20 p-4 rounded-xl border border-[#424858]/10">
+                  <div className="relative w-14 h-14 shrink-0">
                     <svg viewBox="0 0 64 64" className="w-full h-full transform -rotate-90">
                       <circle
                         cx="32"
@@ -613,23 +616,22 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
                         className="transition-all duration-1000"
                       />
                     </svg>
-                    <div className="absolute inset-0 flex items-center justify-center text-[11px] font-black text-[#5bf4de]">
+                    <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-[#5bf4de]">
                       {hrProgress.performanceScore || 0}%
                     </div>
                   </div>
-                  <div>
-                    <h4 className="text-[10px] text-[#a5abbd] uppercase font-bold tracking-wider mb-1">HR Behavioral</h4>
+                  <div className="text-left">
+                    <h4 className="text-[10px] text-[#a5abbd] uppercase font-bold tracking-wider mb-0.5">HR Behavioral</h4>
                     <p className="text-white text-xs font-semibold">{hrCounts.total} Answered</p>
-                    <div className="flex gap-2.5 mt-1 text-[9px] text-[#a5abbd] font-bold">
-                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#5bf4de]"></span>{hrCounts.correct} Right</span>
-                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>{hrCounts.incorrect} Practice</span>
+                    <div className="flex gap-2 mt-0.5 text-[9px] text-[#a5abbd] font-bold">
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#5bf4de]"></span>{hrCounts.correct} Mastered</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Tech Flashcards circular progress */}
-                <div className="flex items-center gap-4 bg-black/25 p-4 rounded-xl border border-[#424858]/10">
-                  <div className="relative w-16 h-16 shrink-0">
+                <div className="flex items-center gap-4 bg-black/20 p-4 rounded-xl border border-[#424858]/10">
+                  <div className="relative w-14 h-14 shrink-0">
                     <svg viewBox="0 0 64 64" className="w-full h-full transform -rotate-90">
                       <circle
                         cx="32"
@@ -652,46 +654,17 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
                         className="transition-all duration-1000"
                       />
                     </svg>
-                    <div className="absolute inset-0 flex items-center justify-center text-[11px] font-black text-[#5bf4de]">
+                    <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-[#5bf4de]">
                       {techProgress.performanceScore || 0}%
                     </div>
                   </div>
-                  <div>
-                    <h4 className="text-[10px] text-[#a5abbd] uppercase font-bold tracking-wider mb-1">Technical Skills</h4>
+                  <div className="text-left">
+                    <h4 className="text-[10px] text-[#a5abbd] uppercase font-bold tracking-wider mb-0.5">Technical Skills</h4>
                     <p className="text-white text-xs font-semibold">{techCounts.total} Answered</p>
-                    <div className="flex gap-2.5 mt-1 text-[9px] text-[#a5abbd] font-bold">
-                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#5bf4de]"></span>{techCounts.correct} Right</span>
-                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>{techCounts.incorrect} Practice</span>
+                    <div className="flex gap-2 mt-0.5 text-[9px] text-[#a5abbd] font-bold">
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#5bf4de]"></span>{techCounts.correct} Mastered</span>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* Technical Difficulty Level Breakdown */}
-              <div className="border-t border-[#424858]/10 pt-5">
-                <p className="text-[10px] text-[#a5abbd] uppercase font-black tracking-widest mb-4">Technical Level Mastery</p>
-                <div className="grid grid-cols-2 gap-4">
-                  {['Beginner', 'Intermediate', 'Advanced', 'Expert'].map((level) => {
-                    const stat = techDiffStats[level] || { total: 0, correct: 0, percentage: 0 };
-                    return (
-                      <div key={level} className="bg-black/10 p-3 rounded-lg border border-[#424858]/5">
-                        <div className="flex justify-between items-baseline mb-2">
-                          <span className="text-[10px] font-bold text-[#e0e5f9]">{level}</span>
-                          <span className="text-[9px] font-black text-[#5bf4de]">{stat.percentage}%</span>
-                        </div>
-                        <div className="h-1.5 bg-black/40 rounded-full overflow-hidden mb-1">
-                          <div
-                            className="h-full bg-[#5bf4de] transition-all duration-500"
-                            style={{ width: `${stat.percentage}%` }}
-                          ></div>
-                        </div>
-                        <div className="flex justify-between text-[8px] text-[#a5abbd] font-bold">
-                          <span>{stat.total} attempted</span>
-                          <span>{stat.correct} correct</span>
-                        </div>
-                      </div>
-                    );
-                  })}
                 </div>
               </div>
             </div>
