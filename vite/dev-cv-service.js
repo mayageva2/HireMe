@@ -174,7 +174,19 @@ Do not include any markdown formatting, backticks (e.g. \`\`\`json), prefix, or 
       throw new Error('OpenAI returned empty content');
     }
 
-    const parsed = JSON.parse(content);
+    let cleanContent = content.trim();
+    if (cleanContent.startsWith('```')) {
+      const firstNewline = cleanContent.indexOf('\n');
+      if (firstNewline !== -1) {
+        cleanContent = cleanContent.substring(firstNewline + 1);
+      }
+      if (cleanContent.endsWith('```')) {
+        cleanContent = cleanContent.substring(0, cleanContent.length - 3);
+      }
+      cleanContent = cleanContent.trim();
+    }
+
+    const parsed = JSON.parse(cleanContent);
     if (!Array.isArray(parsed.questions)) {
       throw new Error('OpenAI response does not contain a questions array');
     }
@@ -621,9 +633,15 @@ export function devCvServicePlugin() {
               const skills = cvData.skills || []
               const role = cvData.personalInfo?.summary?.split('.')[0] || cvData.personalInfo?.fullName || 'Software Engineer'
 
-              let questions = await generateTechQuestionsWithOpenAI(cvData, role, difficulty)
-              if (!questions) {
-                questions = getMockTechQuestions(skills, role, difficulty)
+              let questions;
+              if (Object.keys(cvData).length === 0) {
+                console.warn('[dev-cv-service] User CV is missing. Falling back to default role-agnostic questions.');
+                questions = getMockTechQuestions([], 'Software Engineer', difficulty);
+              } else {
+                questions = await generateTechQuestionsWithOpenAI(cvData, role, difficulty);
+                if (!questions) {
+                  questions = getMockTechQuestions(skills, role, difficulty);
+                }
               }
 
               db[username].techQuestions = db[username].techQuestions || {}

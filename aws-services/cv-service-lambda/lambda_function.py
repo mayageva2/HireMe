@@ -548,7 +548,16 @@ Do not include any markdown formatting, backticks, prefix, or suffix. Output onl
         if not content:
             raise ValueError("OpenAI returned an empty response")
 
-        parsed = json.loads(content)
+        clean_content = content.strip()
+        if clean_content.startswith("```"):
+            lines = clean_content.splitlines()
+            if lines and lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            clean_content = "\n".join(lines).strip()
+
+        parsed = json.loads(clean_content)
         return parsed.get("questions") or []
     except Exception as e:
         print(f"[cv-service-lambda] OpenAI tech questions API request failed: {e}")
@@ -848,9 +857,13 @@ def lambda_handler(event, context):
                 summary = personal_info.get("summary") or ""
                 role = summary.split(".")[0] if summary else personal_info.get("fullName") or "Software Engineer"
 
-                questions = generate_tech_questions_with_openai(cv_data, role, difficulty)
-                if not questions:
-                    questions = get_mock_tech_questions(skills, role, difficulty)
+                if not cv_data:
+                    print("[cv-service-lambda] Warning: User CV is missing. Falling back to default role-agnostic questions.")
+                    questions = get_mock_tech_questions([], "Software Engineer", difficulty)
+                else:
+                    questions = generate_tech_questions_with_openai(cv_data, role, difficulty)
+                    if not questions:
+                        questions = get_mock_tech_questions(skills, role, difficulty)
 
                 table.put_item(
                     Item={
