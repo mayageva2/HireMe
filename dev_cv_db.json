@@ -150,6 +150,98 @@
       ],
       "analyzedAt": "2026-07-20T07:06:41.507Z",
       "isMockFallback": false
+    },
+    "techQuestions": {
+      "Beginner": [
+        {
+          "id": "q1a2b3c4d5e6f7g8h9i0j",
+          "question": "Can you explain the difference between a compiled language like C++ and an interpreted language like JavaScript?",
+          "answer": "A compiled language like C++ is transformed from source code into machine code by a compiler before execution. This machine code runs directly on the hardware, making compiled programs generally faster. An interpreted language like JavaScript is executed line-by-line by an interpreter at runtime, which can make it more flexible but usually slower. Compiled languages require a build step, while interpreted languages can be run directly. For example, C++ code is compiled into an executable, while JavaScript code runs in a browser or runtime environment like Node.js.",
+          "category": "Programming Languages"
+        },
+        {
+          "id": "x9y8z7w6v5u4t3s2r1q0",
+          "question": "What are the basic principles of Object-Oriented Programming (OOP) and how did you apply them in your DonkeyKong project?",
+          "answer": "The basic principles of OOP are encapsulation, inheritance, polymorphism, and abstraction. Encapsulation means bundling data and methods that operate on that data within classes. Inheritance allows new classes to derive from existing ones, reusing code. Polymorphism lets objects be treated as instances of their parent class, enabling method overriding. Abstraction hides complex details and exposes only necessary parts. In the DonkeyKong project, I used classes to represent game entities like Player, Enemy, and Platform. I encapsulated their properties and behaviors, used inheritance to create specialized enemies, and applied polymorphism to handle different enemy movements through a common interface.",
+          "category": "Object-Oriented Programming"
+        },
+        {
+          "id": "m3n4b5v6c7x8z9a0s1d2",
+          "question": "What is the purpose of version control systems like Git, and how have you used Git and GitHub in your projects?",
+          "answer": "Version control systems like Git help manage changes to source code over time, enabling multiple developers to collaborate without overwriting each other's work. They track history, allow branching and merging, and help revert to previous versions if needed. I have used Git to commit incremental changes to my projects, create branches for new features, and merge them back into the main branch after testing. Using GitHub, I hosted my repositories remotely, collaborated with others by pushing and pulling code, and used pull requests to review and integrate changes safely.",
+          "category": "Version Control"
+        },
+        {
+          "id": "p0o9i8u7y6t5r4e3w2q1",
+          "question": "Can you describe what a Bash script is and give an example of a simple task you automated using Bash scripting?",
+          "answer": "A Bash script is a text file containing a series of commands for the Bash shell to execute. It automates repetitive tasks in Unix/Linux environments. For example, I wrote a Bash script to automate backing up my project files by copying them to a backup directory with a timestamp. The script used commands like 'cp' to copy files and 'date' to generate the timestamp. This saved time and reduced errors compared to manual copying. Bash scripting is useful for automating builds, deployments, and system maintenance tasks.",
+          "category": "Shell Scripting"
+        },
+        {
+          "id": "l1k2j3h4g5f6d7s8a9z0",
+          "question": "What is the role of data structures in programming, and can you explain the difference between an array and a linked list?",
+          "answer": "Data structures organize and store data efficiently to enable effective access and modification. Arrays are collections of elements stored contiguously in memory, allowing fast index-based access but fixed size. Linked lists consist of nodes where each node contains data and a reference to the next node, allowing dynamic size and easy insertion/deletion but slower access since traversal is sequential. Arrays are ideal when you need quick access by index, while linked lists are better when frequent insertions or deletions occur.",
+          "category": "Data Structures"
+        }
+      ],
+      "Expert": [
+        {
+          "id": "e1f2c3d4-5678-4a9b-8cde-123456789abc",
+          "question": "Considering your experience developing an emulator in Java with XML parsing and JavaFX GUI integration, how would you architect the emulator to ensure scalability and maintainability when adding support for multiple instruction sets or hardware configurations?",
+          "answer": "To architect a scalable and maintainable emulator supporting multiple instruction sets or hardware configurations, I would adopt a modular and extensible design pattern such as the Strategy or Abstract Factory pattern. The core emulator engine would define interfaces for CPU, memory, and IO components. Each instruction set or hardware configuration would be implemented as separate classes adhering to these interfaces, allowing easy swapping or extension without modifying the core logic. Dependency injection can be used to manage component instantiation. For XML parsing, I would design a flexible schema and use a validation layer to ensure configuration correctness. The GUI would be decoupled from the emulator logic via observer or MVC patterns to allow independent updates. This approach promotes separation of concerns, easier testing, and future feature additions without large refactoring.",
+          "category": "Software Architecture"
+        },
+        {
+          "id": "a9b8c7d6-5432-1f0e-9d8c-76543210fedc",
+          "question": "In your DonkeyKong C++ project using object-oriented design, how would you optimize the game's performance and memory usage on resource-constrained systems while maintaining code readability and extensibility?",
+          "answer": "To optimize performance and memory usage in the DonkeyKong C++ game on constrained systems, I would first profile the application to identify bottlenecks. For memory, I would use efficient data structures, avoid unnecessary dynamic allocations, and implement object pooling for frequently created/destroyed game entities. Using stack allocation where possible reduces heap fragmentation. For performance, minimizing expensive operations in the game loop is critical; for example, precompute values, cache results, and use spatial partitioning techniques for collision detection to reduce complexity. I would also leverage move semantics and smart pointers to manage resources safely and efficiently. To maintain readability and extensibility, I would adhere to SOLID principles, keep classes focused, and document performance-critical sections clearly. This balance ensures the game runs smoothly without sacrificing maintainability.",
+          "category": "C++ Optimization"
+        },
+        {
+          "id": "f0e1d2c3-b4a5-6789-0abc-def123456789",
+          "question": "Given your experience with Docker and Linux environments, how would you design a containerized development environment for your Java-based S-Emulator project that supports rapid iteration, debugging, and consistent builds across different developer machines?",
+          "answer": "Designing a containerized development environment for the Java-based S-Emulator involves creating a Docker image that includes all dependencies such as JDK, JavaFX libraries, XML parsers, and build tools like Maven or Gradle. The Dockerfile should be optimized for caching layers to speed up rebuilds. I would mount the source code directory as a volume to allow live code changes without rebuilding the image, facilitating rapid iteration. For debugging, I would expose necessary ports and configure the container to run in debug mode, enabling IDE remote debugging. Additionally, I would include scripts or Docker Compose configurations to orchestrate the environment, including any auxiliary services if needed. Ensuring environment variables and configurations are externalized promotes consistency across developer machines. This setup guarantees reproducible builds and streamlines the development workflow.",
+          "category": "DevOps / Containerization"
+        },
+        {
+          "id": "1234abcd-5678-ef90-1234-56789abcdef0",
+          "question": "How would you approach designing and implementing an efficient and thread-safe logging system in C++ for your DonkeyKong game that can handle high-frequency events without degrading game performance?",
+          "answer": "To design an efficient, thread-safe logging system in C++ for a high-frequency event environment like the DonkeyKong game, I would implement an asynchronous logging mechanism. The logger would use a lock-free queue or concurrent buffer to collect log messages from multiple threads without blocking the game loop. A dedicated logging thread would consume messages from this queue and write them to disk or output streams. To minimize overhead, I would use lightweight log message structures and avoid expensive formatting in the game threads, deferring it to the logging thread. Additionally, log levels and filters would be implemented to control verbosity dynamically. Using atomic operations and memory barriers ensures thread safety without heavy mutex contention. This design balances performance with reliability and allows detailed diagnostics without impacting gameplay.",
+          "category": "C++ Concurrency"
+        },
+        {
+          "id": "9f8e7d6c-5b4a-3210-fedc-ba9876543210",
+          "question": "Reflecting on your experience with problem-solving and algorithm challenges, how would you lead a team to design a scalable algorithm for real-time data analysis that balances accuracy, latency, and resource constraints in a distributed system?",
+          "answer": "Leading a team to design a scalable real-time data analysis algorithm requires a strategic approach balancing accuracy, latency, and resource constraints. I would start by clearly defining the problem scope and performance requirements with stakeholders. Next, I would promote a modular design that separates data ingestion, processing, and output stages, enabling independent scaling. For algorithm selection, I would evaluate approximate algorithms or streaming algorithms (e.g., sketches, bloom filters) that reduce computational overhead while maintaining acceptable accuracy. To minimize latency, I would leverage parallel processing and distributed computing frameworks, ensuring data partitioning aligns with processing logic to reduce communication overhead. I would also implement backpressure and load balancing mechanisms to handle variable data rates. Throughout, I would foster collaboration via code reviews, continuous integration, and performance benchmarking to iteratively refine the solution. This leadership approach ensures a robust, efficient, and maintainable system.",
+          "category": "Distributed Systems / Algorithm Design"
+        }
+      ]
+    },
+    "techProgress": {
+      "history": {
+        "e1f7c9b4-3a1d-4b8e-9f2a-5b2c7d8e9f01": {
+          "status": "incorrect",
+          "updatedAt": "2026-08-23T15:51:06.182Z"
+        },
+        "a9d2e4f3-7b6c-4d2a-8f3e-2c9b5d1a7f4e": {
+          "status": "correct",
+          "updatedAt": "2026-08-23T15:51:17.377Z"
+        },
+        "b3c7f9d2-5a8e-4e1b-9f0c-3d4a7e2b1f6c": {
+          "status": "correct",
+          "updatedAt": "2026-08-23T15:51:27.783Z"
+        },
+        "d4e9a2b7-8f5c-4d3a-9b1e-7f0c2a4d5e6f": {
+          "status": "incorrect",
+          "updatedAt": "2026-08-23T15:51:31.994Z"
+        },
+        "f7a1c3d9-6b2e-4f8a-9d0f-3e5b7c1a2d4e": {
+          "status": "correct",
+          "updatedAt": "2026-08-23T15:51:40.932Z"
+        }
+      },
+      "activeDifficulty": "Expert",
+      "performanceScore": 60
     }
   }
 }

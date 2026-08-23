@@ -89,7 +89,7 @@ const CVThumbnail = React.memo(({ cvData, onShowCV }) => {
   );
 });
 
-const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowCV, onShowFeedback, isStartingInterview }) => {
+const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV, onShowFeedback, isStartingInterview }) => {
   const [realUser, setRealUser] = useState({ 
     fullName: 'Loading...', 
     profession: 'Loading...', 
@@ -314,7 +314,7 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowCV, onShowFeedb
 
               <div className="absolute top-full left-0 mt-1 w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top scale-95 group-hover:scale-100 z-50">
                 <div className="p-2 rounded-xl border border-[#424858]/30 shadow-2xl" style={{ backgroundColor: theme.surface }}>
-                  <button className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-[#a5abbd] hover:text-[#5bf4de] hover:bg-[#080e1c]/50 rounded-lg transition-all uppercase tracking-wider whitespace-nowrap">
+                  <button onClick={onShowTech} className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-[#a5abbd] hover:text-[#5bf4de] hover:bg-[#080e1c]/50 rounded-lg transition-all uppercase tracking-wider whitespace-nowrap">
                     <span className="material-symbols-outlined text-sm">code</span>
                     Technical Questions
                   </button>
@@ -369,7 +369,7 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowCV, onShowFeedb
             <div className="p-6 rounded-[16px] border border-[#424858]/20" style={{ backgroundColor: theme.surface }}>
               <h3 className="font-bold text-sm mb-4 uppercase tracking-wider text-[#a5abbd]">Quick Access</h3>
               <div className="space-y-2">
-                <button className="w-full text-left p-3 bg-black/30 hover:bg-black/50 rounded-lg flex justify-between items-center transition-all border border-transparent hover:border-[#5bf4de]/30">
+                <button onClick={onShowTech} className="w-full text-left p-3 bg-black/30 hover:bg-black/50 rounded-lg flex justify-between items-center transition-all border border-transparent hover:border-[#5bf4de]/30">
                   <span className="text-sm font-semibold">Technical Questions</span>
                   <span className="material-symbols-outlined text-sm text-[#5bf4de]">chevron_right</span>
                 </button>
