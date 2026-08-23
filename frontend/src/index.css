@@ -13,6 +13,31 @@ body {
   color: #e0e5f9;
 }
 
+/* Scroll containers exist on several screens, so keep this out of any one component. */
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #5bf4de rgba(255, 255, 255, 0.05);
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+  display: block;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #5bf4de;
+  border-radius: 3px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: #46eedd;
+}
+
 .perspective-1000 {
   perspective: 1000px;
 }

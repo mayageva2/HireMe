@@ -366,7 +366,10 @@ const InterviewFeedback = ({ roomName, onBack, onLogout }) => {
   const selected = sessions.find((item) => item.id === selectedId) || sessions[0] || null;
 
   return (
-    <div className="min-h-screen text-[#e0e5f9] font-inter" style={{ backgroundColor: theme.background }}>
+    <div
+      className="min-h-screen max-h-screen overflow-y-auto custom-scroll text-[#e0e5f9] font-inter"
+      style={{ backgroundColor: theme.background }}
+    >
       <header
         className="sticky top-0 z-40 border-b border-[#424858]/20 px-6 h-16 flex items-center justify-between"
         style={{ backgroundColor: theme.background }}
