@@ -20,12 +20,14 @@ from livekit.plugins import noise_cancellation, silero
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 from livekit.agents import WorkerOptions
 
+import interview_feedback
+
 logger = logging.getLogger("agent")
 
 load_dotenv(".env")
 os.environ["AWS_REGION"] = os.getenv("AWS_REGION", "us-east-1")
 
-DEFAULT_AVATAR_CONTEXT = {"name": "Candidate", "role": "General Position"}
+DEFAULT_AVATAR_CONTEXT = {"name": "Candidate", "role": "General Position", "user_id": ""}
 
 CARTESIA_VOICE = "f786b574-daa5-4673-aa0c-cbe3e8534c02"
 
@@ -122,6 +124,7 @@ async def wait_for_user_context(room: rtc.Room, timeout: float = 30.0) -> dict:
             return {
                 "name": data.get("name", DEFAULT_AVATAR_CONTEXT["name"]),
                 "role": data.get("role", DEFAULT_AVATAR_CONTEXT["role"]),
+                "user_id": data.get("user_id") or "",
             }
         return None
 
@@ -190,6 +193,7 @@ def load_avatar_context(ctx: JobContext) -> dict | None:
         return {
             "name": data.get("name", DEFAULT_AVATAR_CONTEXT["name"]),
             "role": data.get("role", DEFAULT_AVATAR_CONTEXT["role"]),
+            "user_id": data.get("user_id") or "",
         }
     return None
 
@@ -250,6 +254,62 @@ async def entrypoint(ctx: JobContext):
         ),
     )
     print("--- DEBUG: Session started ---")
+
+    transcript: list[dict] = []
+    started_at = interview_feedback.utc_now_iso()
+
+    @session.on("conversation_item_added")
+    def _on_conversation_item(ev):
+        try:
+            item = getattr(ev, "item", None)
+            role = str(getattr(item, "role", "") or "")
+            text = getattr(item, "text_content", None) or ""
+            if role in ("user", "assistant") and text.strip():
+                transcript.append(
+                    {
+                        "role": role,
+                        "text": text,
+                        "at": interview_feedback.utc_now_iso(),
+                    }
+                )
+        except Exception as exc:
+            print(f"--- WARN: could not record transcript turn: {exc} ---")
+
+    async def _analyze_and_store(*_args):
+        try:
+            name = avatar_context.get("name", DEFAULT_AVATAR_CONTEXT["name"])
+            role = avatar_context.get("role", DEFAULT_AVATAR_CONTEXT["role"])
+            user_id = avatar_context.get("user_id") or ""
+
+            if not user_id:
+                print("--- DEBUG: No user_id in metadata; skipping interview feedback ---")
+                return
+
+            answers = interview_feedback.count_user_turns(transcript)
+            if not interview_feedback.has_enough_content(transcript):
+                print(f"--- DEBUG: Only {answers} answer(s); skipping interview feedback ---")
+                return
+
+            print(f"--- DEBUG: Analyzing interview for {user_id} ({answers} answers) ---")
+            feedback = await interview_feedback.analyze_transcript(
+                transcript, name=name, role=role
+            )
+            record = interview_feedback.build_record(
+                user_id=user_id,
+                room=ctx.room.name,
+                name=name,
+                role=role,
+                transcript=transcript,
+                feedback=feedback,
+                started_at=started_at,
+                ended_at=interview_feedback.utc_now_iso(),
+            )
+            await interview_feedback.save_record(record)
+            print(f"--- DEBUG: Interview feedback stored: {record['sortKey']} ---")
+        except Exception as exc:
+            print(f"--- ERROR: Interview feedback pipeline failed: {exc} ---")
+
+    ctx.add_shutdown_callback(_analyze_and_store)
 
     simli_conf = simli.SimliConfig(
         api_key=os.getenv("SIMLI_API_KEY", ""),

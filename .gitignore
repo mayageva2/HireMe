@@ -42,4 +42,7 @@ dist/
 !.env.example
 node_modules/
 
+# Local interview transcripts written by the agent in dev
+dev_interviews_db.json
+
 

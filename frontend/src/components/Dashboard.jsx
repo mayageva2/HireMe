@@ -1,31 +1,39 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { fetchUserAttributes, fetchAuthSession } from 'aws-amplify/auth';
 import avatarSimulationPic from '../assets/avatarImage.png'; 
 import cvDraftPic from '../assets/fakeCv.png';
 import CVPreviewer from './CVPreviewer';
+import { fetchInterviews } from '../interviewsApi';
 
-const mockData = {
-  user: {
-    profession: "Software Engineer", 
-    stats: { interviews: 12, offers: 4, score: 8.5 }
-  },
-  analytics: {
-    readiness: "Strong",
-    percentile: "Top 15%",
-    skills: [
-      { name: "UX", level: 92 },
-      { name: "Tech", level: 78 },
-      { name: "Visual", level: 85 },
-      { name: "Research", level: 70 },
-      { name: "Comm", level: 95 }
-    ]
-  },
-  cvSuggestions: [
-    "Quantify your impact at 'Design Co'",
-    "Update 'Skills' to include React 18",
-    "Fix alignment in 'Education' section"
-  ]
-};
+/** Maps interview scores (oldest first) onto the 200x100 viewBox of the trend chart. */
+function buildTrendChart(scores) {
+  if (!scores.length) return null;
+
+  const width = 200;
+  const top = 12;
+  const baseline = 85;
+
+  const points = scores.map((score, index) => {
+    const x = scores.length === 1 ? width / 2 : (index / (scores.length - 1)) * width;
+    const clamped = Math.max(0, Math.min(10, score));
+    const y = baseline - (clamped / 10) * (baseline - top);
+    return { x, y };
+  });
+
+  const line = points
+    .map((point, index) => `${index === 0 ? 'M' : 'L'}${point.x.toFixed(1)} ${point.y.toFixed(1)}`)
+    .join(' ');
+  const area = `${line} L${points[points.length - 1].x.toFixed(1)} 100 L${points[0].x.toFixed(1)} 100 Z`;
+
+  return { line, area, points };
+}
+
+function formatSessionDate(iso) {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+}
 
 const CVThumbnail = React.memo(({ cvData, onShowCV }) => {
   const containerRef = useRef(null);
@@ -81,7 +89,7 @@ const CVThumbnail = React.memo(({ cvData, onShowCV }) => {
   );
 });
 
-const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowCV, isStartingInterview }) => {
+const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowCV, onShowFeedback, isStartingInterview }) => {
   const [realUser, setRealUser] = useState({ 
     fullName: 'Loading...', 
     profession: 'Loading...', 
@@ -92,6 +100,7 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowCV, isStartingI
   const [cvData, setCvData] = useState(null);
   const [cvAnalysis, setCvAnalysis] = useState(null);
   const [loadingCv, setLoadingCv] = useState(true);
+  const [interviews, setInterviews] = useState([]);
 
   useEffect(() => {
     async function loadData() {
@@ -123,6 +132,12 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowCV, isStartingI
           setCvData(data.cv);
           setCvAnalysis(data.analysis);
         }
+
+        try {
+          setInterviews(await fetchInterviews());
+        } catch (interviewErr) {
+          console.warn('Could not load interview history:', interviewErr);
+        }
       } catch (error) {
         console.error("Error loading dashboard data:", error);
         setRealUser({ fullName: "Guest User", profession: "Guest", initials: "GU" });
@@ -143,6 +158,27 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowCV, isStartingI
   };
 
   const hasDraft = !!cvData;
+
+  // Newest first from the API; the chart wants oldest first.
+  const interviewStats = useMemo(() => {
+    if (!interviews.length) return null;
+
+    const scores = interviews.map((session) => Number(session.feedback?.overallScore) || 0);
+    const average = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    const latest = interviews[0];
+    const categories = Array.isArray(latest.feedback?.categories) ? latest.feedback.categories : [];
+
+    return {
+      count: interviews.length,
+      averageScore: (Math.round(average * 10) / 10).toFixed(1),
+      latestScore: (Number(latest.feedback?.overallScore) || 0).toFixed(1),
+      skills: categories.map((category) => ({
+        name: category.name,
+        level: Math.max(0, Math.min(10, Number(category.score) || 0)) * 10,
+      })),
+      chart: buildTrendChart(scores.slice().reverse()),
+    };
+  }, [interviews]);
 
   const handleSuggestionClick = (category) => {
     // Write query parameter to URL history so CVBuilder can catch it on mount
@@ -324,9 +360,9 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowCV, isStartingI
               </div>
 
               <div className="grid grid-cols-3 gap-2 w-full pt-4 border-t border-[#424858]/20">
-                <div><p className="text-lg font-black text-[#5bf4de]">{mockData.user.stats.interviews}</p><p className="text-[8px] text-[#a5abbd] uppercase font-bold">Interviews</p></div>
+                <div><p className="text-lg font-black text-[#5bf4de]">{interviewStats?.count ?? 0}</p><p className="text-[8px] text-[#a5abbd] uppercase font-bold">Interviews</p></div>
                 <div className="border-x border-[#424858]/20"><p className="text-lg font-black text-[#5bf4de]">04</p><p className="text-[8px] text-[#a5abbd] uppercase font-bold">Offers</p></div>
-                <div><p className="text-lg font-black text-[#5bf4de]">{mockData.user.stats.score}</p><p className="text-[8px] text-[#a5abbd] uppercase font-bold">Avg Score</p></div>
+                <div><p className="text-lg font-black text-[#5bf4de]">{interviewStats?.averageScore ?? '—'}</p><p className="text-[8px] text-[#a5abbd] uppercase font-bold">Avg Score</p></div>
               </div>
             </div>
             
@@ -350,48 +386,81 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowCV, isStartingI
             <div className="p-6 rounded-[16px] border border-[#424858]/20" style={{ backgroundColor: theme.surface }}>
               <div className="flex items-center justify-between mb-8 border-b border-[#424858]/10 pb-4">
                 <h3 className="font-bold">Performance Analytics</h3>
-                <div className="flex bg-black/20 rounded-full p-1">
-                  <button className="px-3 py-1 text-[10px] bg-[#2c3951] rounded-full">Weekly</button>
-                  <button className="px-3 py-1 text-[10px] text-[#a5abbd]">Monthly</button>
-                </div>
+                {interviewStats && (
+                  <button
+                    onClick={onShowFeedback}
+                    className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#5bf4de] border border-[#5bf4de]/30 rounded-full hover:bg-[#5bf4de]/10 transition-all"
+                  >
+                    Full Reports
+                  </button>
+                )}
               </div>
 
-              <div className="flex flex-col lg:flex-row gap-8">
-                <div className="flex-1 flex flex-col">
-                  <div className="flex justify-between items-start mb-6">
-                    <div>
-                      <p className="text-[10px] text-[#a5abbd] uppercase font-bold">Interview Score</p>
-                      <h4 className="text-2xl font-black text-[#5bf4de]">8.5<span className="text-xs text-[#a5abbd] font-normal ml-1">/10</span></h4>
+              {interviewStats ? (
+                <div className="flex flex-col lg:flex-row gap-8">
+                  <div className="flex-1 flex flex-col">
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <p className="text-[10px] text-[#a5abbd] uppercase font-bold">Last Interview Score</p>
+                        <h4 className="text-2xl font-black text-[#5bf4de]">{interviewStats.latestScore}<span className="text-xs text-[#a5abbd] font-normal ml-1">/10</span></h4>
+                      </div>
+                    </div>
+                    <div className="w-full aspect-[2/1] mt-auto">
+                      <svg viewBox="0 0 200 100" className="w-full h-full">
+                        <line x1="0" y1="48.5" x2="200" y2="48.5" stroke="#424858" strokeWidth="1" strokeDasharray="4 4" />
+                        {interviewStats.chart && (
+                          <>
+                            <path d={interviewStats.chart.area} fill="#1b3f3b" opacity="0.5" />
+                            <path
+                              d={interviewStats.chart.line}
+                              stroke="#5bf4de"
+                              strokeWidth="3"
+                              fill="none"
+                              strokeLinecap="round"
+                            />
+                            {interviewStats.chart.points.map((point, index) => (
+                              <circle key={index} cx={point.x} cy={point.y} r="3" fill="#5bf4de" />
+                            ))}
+                          </>
+                        )}
+                        <text x="4" y="97" fill="#a5abbd" fontSize="8" fontWeight="bold">
+                          {interviewStats.count > 1 ? 'SESSION 1' : ''}
+                        </text>
+                        <text x="140" y="97" fill="#a5abbd" fontSize="8" fontWeight="bold">LAST SESSION</text>
+                      </svg>
                     </div>
                   </div>
-                  <div className="w-full aspect-[2/1] mt-auto">
-                    <svg viewBox="0 0 200 100" className="w-full h-full">
-                      <line x1="0" y1="35" x2="200" y2="35" stroke="#424858" strokeWidth="1" strokeDasharray="4 4" /> 
-                      <path d="M0 80 Q 25 70, 50 60 T 100 40 T 150 20 T 200 10 L 200 100 L 0 100 Z" fill="#1b3f3b" opacity="0.5" />
-                      <path d="M0 80 Q 25 70, 50 60 T 100 40 T 150 20 T 200 10" stroke="#5bf4de" strokeWidth="3" fill="none" strokeLinecap="round"/>
-                      <text x="10" y="95" fill="#a5abbd" fontSize="8" fontWeight="bold">SESSION 1</text>
-                      <text x="140" y="95" fill="#a5abbd" fontSize="8" fontWeight="bold">LAST SESSION</text>
-                    </svg>
+                  <div className="hidden lg:block w-[1px] bg-[#424858]/20"></div>
+                  <div className="flex-1">
+                    <p className="text-[10px] text-[#a5abbd] uppercase font-bold mb-4">Skill Breakdown</p>
+                    <div className="space-y-4">
+                      {interviewStats.skills.length > 0 ? (
+                        interviewStats.skills.map(skill => (
+                          <div key={skill.name}>
+                            <div className="flex justify-between text-[10px] mb-1 font-bold uppercase">
+                              <span className="text-[#a5abbd]">{skill.name}</span>
+                              <span className="text-white">{skill.level}%</span>
+                            </div>
+                            <div className="h-1 bg-black/40 rounded-full overflow-hidden">
+                              <div className="h-full bg-[#5bf4de]" style={{ width: `${skill.level}%` }}></div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-[#a5abbd] italic">No skill breakdown for your last session.</p>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className="hidden lg:block w-[1px] bg-[#424858]/20"></div>
-                <div className="flex-1">
-                  <p className="text-[10px] text-[#a5abbd] uppercase font-bold mb-4">Skill Breakdown</p>
-                  <div className="space-y-4">
-                    {mockData.analytics.skills.map(skill => (
-                      <div key={skill.name}>
-                        <div className="flex justify-between text-[10px] mb-1 font-bold uppercase">
-                          <span className="text-[#a5abbd]">{skill.name}</span>
-                          <span className="text-white">{skill.level}%</span>
-                        </div>
-                        <div className="h-1 bg-black/40 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#5bf4de]" style={{ width: `${skill.level}%` }}></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              ) : (
+                <div className="flex flex-col items-center text-center py-8 px-4">
+                  <span className="material-symbols-outlined text-4xl text-[#424858] mb-3">insights</span>
+                  <p className="text-sm font-bold mb-1.5">No interview data yet</p>
+                  <p className="text-xs text-[#a5abbd] leading-relaxed max-w-[300px]">
+                    Run an avatar interview and your score, skill breakdown, and coaching feedback will appear here.
+                  </p>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="relative rounded-[16px] overflow-hidden aspect-video bg-black border border-[#424858]/20 group">
@@ -417,6 +486,38 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowCV, isStartingI
                 <p className="text-[#5bf4de] text-[10px] font-bold tracking-widest">FAANG SPECIALIST</p>
               </div>
             </div>
+
+            {interviews.length > 0 && (
+              <div className="p-6 rounded-[16px] border border-[#424858]/20" style={{ backgroundColor: theme.surface }}>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-sm uppercase tracking-wider text-[#a5abbd]">Recent Sessions</h3>
+                  <button onClick={onShowFeedback} className="text-[10px] font-black uppercase tracking-wider text-[#5bf4de] hover:underline">
+                    View all
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {interviews.slice(0, 4).map((session) => {
+                    const score = Number(session.feedback?.overallScore) || 0;
+                    return (
+                      <button
+                        key={session.id}
+                        onClick={onShowFeedback}
+                        className="w-full text-left p-3 bg-black/30 hover:bg-black/50 rounded-lg flex items-center justify-between gap-3 transition-all border border-transparent hover:border-[#5bf4de]/30"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold truncate">{session.role || 'Interview'}</p>
+                          <p className="text-[10px] text-[#a5abbd] uppercase tracking-wider font-bold">
+                            {formatSessionDate(session.endedAt)}
+                            {session.turnCount ? ` · ${session.turnCount} turns` : ''}
+                          </p>
+                        </div>
+                        <span className="text-sm font-black text-[#5bf4de] shrink-0">{score.toFixed(1)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* RIGHT COLUMN */}

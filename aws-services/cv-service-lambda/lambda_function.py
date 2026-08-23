@@ -4,6 +4,7 @@ import os
 import urllib.request
 import boto3
 import jwt
+from boto3.dynamodb.conditions import Key
 from decimal import Decimal
 
 # CORS headers required for API Gateway / Lambda Function URL response
@@ -502,6 +503,41 @@ def lambda_handler(event, context):
         is_analyze_path = path.endswith("/analyze")
         is_polish_path = path.endswith("/polish")
         is_import_path = path.endswith("/import")
+        is_interviews_path = path.endswith("/interviews")
+
+        # --- GET /interviews: Interview feedback history written by the agent ---
+        if method == "GET" and is_interviews_path:
+            query_params = event.get("queryStringParameters") or {}
+            include_transcript = str(query_params.get("full") or "") == "1"
+
+            response = table.query(
+                KeyConditionExpression=Key("User id").eq(username)
+                & Key("Sort Key").begins_with("interview#"),
+                ScanIndexForward=False,
+                Limit=20,
+            )
+
+            interviews = [
+                {
+                    "id": item.get("Sort Key"),
+                    "room": item.get("room"),
+                    "role": item.get("role"),
+                    "candidateName": item.get("candidateName"),
+                    "startedAt": item.get("startedAt"),
+                    "endedAt": item.get("endedAt"),
+                    "durationSeconds": item.get("durationSeconds"),
+                    "turnCount": item.get("turnCount"),
+                    "feedback": item.get("feedback"),
+                    **({"transcript": item.get("transcript")} if include_transcript else {}),
+                }
+                for item in response.get("Items") or []
+            ]
+
+            return {
+                "statusCode": 200,
+                "headers": CORS_HEADERS,
+                "body": json.dumps({"interviews": interviews}, cls=DecimalEncoder)
+            }
  
         # --- GET: Fetch saved CV and Analysis ---
         if method == "GET":

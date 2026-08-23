@@ -11,11 +11,6 @@ const AVATAR_CONTEXT_LAMBDA =
 // Do NOT call the Lambda URL from the browser — its CORS headers are broken (duplicate Allow-Origin).
 export const AVATAR_CONTEXT_URL = '/api/avatar-context';
 
-// Same-origin in dev (Vite proxy). Prod calls Lambda Function URL directly (CORS enabled in token Lambda).
-const LIVEKIT_TOKEN_LAMBDA =
-  import.meta.env.VITE_LIVEKIT_TOKEN_URL ||
-  'https://iexzogfkyuunk7b5sunmodusay0whgku.lambda-url.us-east-1.on.aws/';
-
-export const LIVEKIT_TOKEN_URL = import.meta.env.DEV
-  ? '/api/livekit-token'
-  : LIVEKIT_TOKEN_LAMBDA;
+// Same-origin in both environments. Vite handles dev and CloudFront/API Gateway
+// handles the Terraform deployment.
+export const LIVEKIT_TOKEN_URL = '/api/livekit-token';

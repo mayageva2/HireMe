@@ -4,6 +4,7 @@ import Dashboard from './components/Dashboard';
 import InterviewPage from './InterviewPage';
 import HRFlashcards from './components/HRFlashCards';
 import CVBuilder from './components/CVBuilder';
+import InterviewFeedback from './components/InterviewFeedback';
 import { AVATAR_CONTEXT_URL, LIVEKIT_TOKEN_URL } from './config';
 
 function App() {
@@ -11,6 +12,8 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [roomToken, setRoomToken] = useState(null);
+  const [roomName, setRoomName] = useState(null);
+  const [feedbackRoom, setFeedbackRoom] = useState(null);
   const [avatarContext, setAvatarContext] = useState(null);
   const [mainView, setMainView] = useState('dashboard');
   const [isLoading, setIsLoading] = useState(true);
@@ -62,7 +65,11 @@ function App() {
       const tokenRes = await fetch(LIVEKIT_TOKEN_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(context),
+        body: JSON.stringify({
+          ...context,
+          userId: profile?.userId,
+          sortKey: profile?.sortKey,
+        }),
       });
       if (!tokenRes.ok) {
         throw new Error(`LiveKit token request failed (${tokenRes.status})`);
@@ -72,12 +79,9 @@ function App() {
       if (!data?.token) {
         throw new Error('LiveKit token response did not include a token');
       }
-      if (data.room) {
-        console.log('LiveKit room for this session:', data.room);
-      }
-
       setAvatarContext(context);
       setRoomToken(data.token);
+      setRoomName(data.room || null);
       setMainView('interview');
     } catch (err) {
       console.error('Error starting interview:', err);
@@ -89,6 +93,18 @@ function App() {
     } finally {
       setIsStartingInterview(false);
     }
+  };
+
+  const handleFinishInterview = () => {
+    setFeedbackRoom(roomName);
+    setRoomToken(null);
+    setRoomName(null);
+    setMainView('feedback');
+  };
+
+  const handleShowFeedbackHistory = () => {
+    setFeedbackRoom(null);
+    setMainView('feedback');
   };
 
   const handleLoginSuccess = (profile) => {
@@ -107,6 +123,7 @@ function App() {
       setIsLoggedIn(false);
       setUserProfile(null);
       setRoomToken(null);
+      setRoomName(null);
       setAvatarContext(null);
       setMainView('dashboard');
       setAuthScreen('login');
@@ -171,6 +188,7 @@ function App() {
               isStartingInterview={isStartingInterview}
               onShowHR={() => setMainView('hr_questions')} 
               onShowCV={() => setMainView('cv_builder')}
+              onShowFeedback={handleShowFeedbackHistory}
               onLogout={handleLogout}
             />
           ) : mainView === 'hr_questions' ? (
@@ -188,12 +206,19 @@ function App() {
               onBack={() => setMainView('dashboard')}
               onLogout={handleLogout}
             />
+          ) : mainView === 'feedback' ? (
+            <InterviewFeedback
+              roomName={feedbackRoom}
+              onBack={() => setMainView('dashboard')}
+              onLogout={handleLogout}
+            />
           ) : (
             <InterviewPage
               token={roomToken}
               avatarContext={avatarContext}
               onBack={() => setMainView('dashboard')}
               onLogout={handleLogout}
+              onFinish={handleFinishInterview}
             />
           )}
         </>

@@ -7,7 +7,9 @@ const HRFlashcards = () => {
     const [flipped, setFlipped] = useState(false);
 
     useEffect(() => {
-        const URL = "https://id3damfismgqoirfaedeymaqfi0yueim.lambda-url.us-east-1.on.aws/";
+        const URL =
+            import.meta.env.VITE_HR_FLASHCARDS_URL ||
+            'https://id3damfismgqoirfaedeymaqfi0yueim.lambda-url.us-east-1.on.aws/';
 
         fetch(URL)
             .then(res => res.json())

@@ -28,4 +28,4 @@ RUN LIVEKIT_API_KEY=dev LIVEKIT_API_SECRET=dev python src/agent.py download-file
 EXPOSE 8081
 
 # -u for real-time logging
-CMD ["python", "-u", "src/agent.py", "dev"]
+CMD ["python", "-u", "src/agent.py", "start"]
