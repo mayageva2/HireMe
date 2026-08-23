@@ -27,8 +27,13 @@ const TechFlashcards = () => {
             const res = await fetch('/api/cv/tech-questions/progress', { headers });
             if (res.ok) {
                 const data = await res.json();
-                setProgress(data);
-                if (data.activeDifficulty) {
+                setProgress({
+                    history: {},
+                    performanceScore: 0,
+                    activeDifficulty: 'Beginner',
+                    ...data
+                });
+                if (data && data.activeDifficulty) {
                     setDifficulty(data.activeDifficulty);
                 }
             }
@@ -125,7 +130,7 @@ const TechFlashcards = () => {
         
         // Optimistically update local progress UI state
         const updatedHistory = {
-            ...progress.history,
+            ...(progress?.history || {}),
             [currentQ.id]: { status, difficulty, updatedAt: new Date().toISOString() }
         };
         const historyVals = Object.values(updatedHistory);
@@ -173,7 +178,7 @@ const TechFlashcards = () => {
 
     const getRecommendation = () => {
         const score = progress.performanceScore;
-        const totalAttempts = Object.keys(progress.history).length;
+        const totalAttempts = Object.keys(progress?.history || {}).length;
         if (totalAttempts < 3) return 'Practice at least 3 questions to get recommendations.';
         if (score >= 80) {
             if (difficulty === 'Beginner') return 'Outstanding! Ready to step up to Intermediate difficulty.';

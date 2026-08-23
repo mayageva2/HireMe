@@ -25,7 +25,11 @@ const HRFlashcards = () => {
             const res = await fetch('/api/cv/hr-questions/progress', { headers });
             if (res.ok) {
                 const data = await res.json();
-                setProgress(data);
+                setProgress({
+                    history: {},
+                    performanceScore: 0,
+                    ...data
+                });
             }
         } catch (err) {
             console.error('Error fetching progress:', err);
@@ -59,7 +63,7 @@ const HRFlashcards = () => {
         
         // Optimistically update local progress UI state
         const updatedHistory = {
-            ...progress.history,
+            ...(progress?.history || {}),
             [currentQ.id]: { status, updatedAt: new Date().toISOString() }
         };
         const historyVals = Object.values(updatedHistory);
@@ -106,7 +110,7 @@ const HRFlashcards = () => {
 
     const getRecommendation = () => {
         const score = progress.performanceScore;
-        const totalAttempts = Object.keys(progress.history).length;
+        const totalAttempts = Object.keys(progress?.history || {}).length;
         if (totalAttempts < 3) return 'Practice at least 3 behavioral questions to get recommendations.';
         if (score >= 80) {
             return 'Excellent behavioral strategy! You are ready to handle typical HR screening questions.';
