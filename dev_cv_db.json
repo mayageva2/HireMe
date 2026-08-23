@@ -215,6 +215,70 @@
           "answer": "Leading a team to design a scalable real-time data analysis algorithm requires a strategic approach balancing accuracy, latency, and resource constraints. I would start by clearly defining the problem scope and performance requirements with stakeholders. Next, I would promote a modular design that separates data ingestion, processing, and output stages, enabling independent scaling. For algorithm selection, I would evaluate approximate algorithms or streaming algorithms (e.g., sketches, bloom filters) that reduce computational overhead while maintaining acceptable accuracy. To minimize latency, I would leverage parallel processing and distributed computing frameworks, ensuring data partitioning aligns with processing logic to reduce communication overhead. I would also implement backpressure and load balancing mechanisms to handle variable data rates. Throughout, I would foster collaboration via code reviews, continuous integration, and performance benchmarking to iteratively refine the solution. This leadership approach ensures a robust, efficient, and maintainable system.",
           "category": "Distributed Systems / Algorithm Design"
         }
+      ],
+      "Intermediate": [
+        {
+          "id": "q1a2b3c4d5e6f7g8h9i0j",
+          "question": "In your DonkeyKong project developed in C++, how did you apply object-oriented design principles to manage game entities and their interactions? Can you describe your class hierarchy and how polymorphism was utilized?",
+          "answer": "In the DonkeyKong project, I designed a class hierarchy where each game entity (like Player, Enemy, Platform, and Barrel) inherited from a common base class GameObject. This base class contained shared attributes such as position and methods like update() and draw(). Polymorphism allowed me to override these methods in derived classes to implement specific behaviors. For example, the Player class had input handling and jump mechanics, while the Enemy class implemented AI movement. This design enabled clean code organization, easier maintenance, and extensibility for adding new entities without modifying existing code.",
+          "category": "C++ Object-Oriented Design"
+        },
+        {
+          "id": "x9y8z7w6v5u4t3s2r1q0",
+          "question": "While developing the S-Emulator in Java, how did you implement XML parsing and validation? What libraries or APIs did you use, and how did you ensure the XML data was correctly integrated with the emulator engine?",
+          "answer": "For XML parsing and validation in the S-Emulator project, I used Java's built-in javax.xml.parsers package along with the DocumentBuilderFactory for parsing XML documents into a DOM tree. To validate the XML against an XSD schema, I used the javax.xml.validation package. This ensured the XML configuration files met the required structure before processing. After validation, I traversed the DOM tree to extract configuration parameters and instructions, which were then used to initialize and control the emulator engine. This approach ensured robust input handling and prevented runtime errors due to malformed XML.",
+          "category": "Java XML Parsing"
+        },
+        {
+          "id": "m3n4b5v6c7x8z9a0s1d2",
+          "question": "Explain how you used Bash scripting to automate tasks in a Linux environment during your studies. Can you provide an example script you wrote and describe its purpose and key commands?",
+          "answer": "I used Bash scripting to automate repetitive tasks such as file backups, environment setup, and batch processing. For example, I wrote a script to automate backing up project directories daily. The script used commands like tar to archive files, date to timestamp backups, and cron jobs to schedule execution. A simplified version: #!/bin/bash BACKUP_DIR=~/backups DATE=$(date +%Y-%m-%d) tar -czf $BACKUP_DIR/project_backup_$DATE.tar.gz ~/projects/my_project This script compresses the project directory into a timestamped archive, improving efficiency and reducing manual errors.",
+          "category": "Bash Scripting"
+        },
+        {
+          "id": "f7g6h5j4k3l2m1n0o9p8",
+          "question": "Describe how you have used Docker in your projects or coursework. What are the benefits of containerization, and how did you configure Docker to support your development workflow?",
+          "answer": "I used Docker to containerize development environments, ensuring consistency across different machines and simplifying dependency management. For example, I created Dockerfiles specifying the base image (such as openjdk for Java projects), installed necessary libraries, and set up environment variables. Benefits of containerization include isolation, reproducibility, and ease of deployment. In my workflow, I used Docker Compose to orchestrate multi-container setups, such as running the emulator backend alongside a database or web server. This approach reduced setup time and eliminated 'works on my machine' issues.",
+          "category": "Docker"
+        },
+        {
+          "id": "r2t3y4u5i6o7p8a9s0d1",
+          "question": "Given your experience with Git and GitHub, how do you manage branching and merging in a team project to avoid conflicts and maintain code quality? Describe your typical workflow and any best practices you follow.",
+          "answer": "In team projects, I follow GitFlow or a similar branching model where the main branch (e.g., main or master) holds stable code. Feature branches are created for new functionality or bug fixes. I regularly pull updates from the main branch to keep my branch current and avoid large merge conflicts. Before merging, I ensure code is reviewed via pull requests, and automated tests are run to maintain quality. I also write clear commit messages and use descriptive branch names. This workflow promotes collaboration, reduces integration issues, and maintains a clean project history.",
+          "category": "Git Workflow"
+        }
+      ],
+      "Advanced": [
+        {
+          "id": "a1f3d9b2-4c6e-4f7a-8f2b-5e3c7d9a1b2c",
+          "question": "In your DonkeyKong C++ project, how did you apply object-oriented design principles to manage game entities and their interactions? Can you describe your class hierarchy and how you ensured maintainability and extensibility in your design?",
+          "answer": "In the DonkeyKong project, I used object-oriented design principles such as encapsulation, inheritance, and polymorphism to model game entities like the player, enemies, barrels, and platforms. The base class 'GameObject' encapsulated common attributes like position, velocity, and rendering methods. Derived classes such as 'Player', 'Enemy', and 'Barrel' extended 'GameObject' to implement specific behaviors. I used polymorphism to handle interactions through virtual functions, enabling dynamic behavior changes without modifying existing code. To ensure maintainability, I separated concerns by modularizing input handling, physics, and rendering into different classes or components. Extensibility was achieved by designing interfaces for game entities, allowing new entity types to be added with minimal changes to existing code. This design also facilitated unit testing and debugging.",
+          "category": "C++ Object-Oriented Design"
+        },
+        {
+          "id": "b2e4c7f3-9d1a-4e2f-b5a7-3f9d8c1e2b4a",
+          "question": "While developing the S-Emulator in Java, how did you approach the design and implementation of the emulator engine to efficiently handle instruction execution and state management? Discuss any design patterns or architectural decisions you used.",
+          "answer": "For the S-Emulator, I designed the emulator engine using the State and Command design patterns to manage instruction execution and CPU state transitions effectively. The CPU state, including registers and flags, was encapsulated in a dedicated class. Each instruction was represented as a Command object implementing an execute() method, allowing clean separation of instruction logic. This approach facilitated adding new instructions without altering the core engine. I also implemented a fetch-decode-execute cycle, where the emulator fetched instructions from memory, decoded them using a lookup table or opcode map, and executed the corresponding Command. To maintain performance and clarity, I separated memory management and I/O operations from the CPU logic. This modular architecture improved maintainability and allowed easy integration with the JavaFX GUI for visualization.",
+          "category": "Java Emulator Design"
+        },
+        {
+          "id": "c3d5e6f7-8a9b-4c1d-9e0f-7a8b9c0d1e2f",
+          "question": "Describe how you have used Docker in your projects to improve development workflows. What strategies do you employ to optimize Docker images for faster builds and smaller sizes, especially when working with multi-language environments like C++, Java, and scripting?",
+          "answer": "I use Docker to create consistent development environments that encapsulate dependencies and tools, ensuring that applications run identically across machines. To optimize Docker images, I employ multi-stage builds where the first stage compiles the application (e.g., C++ binaries or Java bytecode) and the second stage contains only the runtime environment and compiled artifacts, significantly reducing image size. I also use lightweight base images like Alpine Linux when possible. Layer caching is leveraged by ordering Dockerfile instructions to minimize rebuilds, placing less frequently changed commands earlier. For multi-language environments, I separate build environments for each language in different stages or containers, then combine only the necessary runtime components. Additionally, I clean up package caches and temporary files during image builds to keep images lean. These strategies speed up build times and reduce resource consumption.",
+          "category": "Docker Optimization"
+        },
+        {
+          "id": "d4e7f8a9-b0c1-4d2e-9f3a-5b6c7d8e9f0a",
+          "question": "Given your experience with Bash scripting and Linux environments, how would you design a robust automation script to monitor system resource usage and alert when thresholds are exceeded? Discuss error handling, logging, and extensibility considerations.",
+          "answer": "To design a robust Bash script for monitoring system resources, I would first define configurable thresholds for CPU, memory, and disk usage. The script would periodically collect metrics using commands like top, free, and df. For error handling, I would check the exit status of each command and handle failures gracefully by logging errors and optionally retrying. Logging would be implemented by appending timestamped entries to a log file, including both normal operation and error messages for auditability. Alerts could be sent via email or system notifications when thresholds are exceeded. To ensure extensibility, the script would be modular, with functions for metric collection, evaluation, logging, and alerting, allowing easy addition of new resource checks or notification methods. I would also include command-line parameters or configuration files to customize behavior without modifying the script code.",
+          "category": "Bash Scripting Automation"
+        },
+        {
+          "id": "e5f9a0b1-c2d3-4e4f-8b7a-9c0d1e2f3a4b",
+          "question": "In your coursework involving data structures and algorithms, how do you approach optimizing algorithm performance for large input sizes? Provide an example where you improved an algorithm's time or space complexity and explain the trade-offs involved.",
+          "answer": "When optimizing algorithms for large inputs, I start by analyzing the time and space complexity to identify bottlenecks. I look for opportunities to replace inefficient algorithms with more optimal ones (e.g., using a hash map instead of nested loops for lookups). For example, in a project involving searching for duplicates in large datasets, I initially used a nested loop approach with O(n^2) complexity. I improved it by using a hash set to track seen elements, reducing time complexity to O(n) at the expense of additional space. The trade-off was increased memory usage, which was acceptable given the input size and available resources. I also consider algorithmic paradigms like divide and conquer, dynamic programming, or greedy approaches to optimize performance. Profiling and benchmarking help validate improvements and guide further optimization.",
+          "category": "Algorithm Optimization"
+        }
       ]
     },
     "techProgress": {
@@ -238,10 +302,60 @@
         "f7a1c3d9-6b2e-4f8a-9d0f-3e5b7c1a2d4e": {
           "status": "correct",
           "updatedAt": "2026-08-23T15:51:40.932Z"
+        },
+        "q1a2b3c4d5e6f7g8h9i0j": {
+          "status": "incorrect",
+          "difficulty": "Intermediate",
+          "updatedAt": "2026-08-23T16:01:05.688Z"
+        },
+        "x9y8z7w6v5u4t3s2r1q0": {
+          "status": "correct",
+          "difficulty": "Intermediate",
+          "updatedAt": "2026-08-23T16:01:08.532Z"
+        },
+        "m3n4b5v6c7x8z9a0s1d2": {
+          "status": "correct",
+          "difficulty": "Intermediate",
+          "updatedAt": "2026-08-23T16:01:10.780Z"
+        },
+        "f7g6h5j4k3l2m1n0o9p8": {
+          "status": "correct",
+          "difficulty": "Intermediate",
+          "updatedAt": "2026-08-23T16:01:13.428Z"
+        },
+        "p0o9i8u7y6t5r4e3w2q1": {
+          "status": "correct",
+          "difficulty": "Beginner",
+          "updatedAt": "2026-08-23T16:02:07.481Z"
         }
       },
-      "activeDifficulty": "Expert",
-      "performanceScore": 60
+      "activeDifficulty": "Advanced",
+      "performanceScore": 70
+    },
+    "hrProgress": {
+      "history": {
+        "18": {
+          "status": "correct",
+          "updatedAt": "2026-08-23T16:00:35.458Z"
+        },
+        "22": {
+          "status": "correct",
+          "updatedAt": "2026-08-23T16:00:32.295Z"
+        },
+        "33": {
+          "status": "correct",
+          "updatedAt": "2026-08-23T16:00:29.119Z"
+        },
+        "36": {
+          "status": "correct",
+          "updatedAt": "2026-08-23T16:00:23.255Z"
+        },
+        "49": {
+          "status": "correct",
+          "updatedAt": "2026-08-23T16:00:25.789Z"
+        }
+      },
+      "performanceScore": 100
     }
   }
 }

@@ -799,9 +799,11 @@ def lambda_handler(event, context):
                     "performanceScore": 0
                 }
 
+                difficulty = body_json.get("difficulty") or progress.get("activeDifficulty") or "Beginner"
                 history = progress.get("history") or {}
                 history[question_id] = {
                     "status": status,
+                    "difficulty": difficulty,
                     "updatedAt": datetime.datetime.utcnow().isoformat() + "Z"
                 }
                 progress["history"] = history

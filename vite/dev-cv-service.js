@@ -584,7 +584,7 @@ export function devCvServicePlugin() {
 
             if (req.method === 'POST' && req.url.includes('/submit')) {
               const body = await readJsonBody(req)
-              const { questionId, status } = body
+              const { questionId, status, difficulty } = body
               const db = loadDatabase()
               if (!db[username]) {
                 db[username] = { cv: null, analysis: null }
@@ -595,6 +595,7 @@ export function devCvServicePlugin() {
               db[username].techProgress.history = db[username].techProgress.history || {}
               db[username].techProgress.history[questionId] = {
                 status,
+                difficulty: difficulty || db[username].techProgress.activeDifficulty || 'Beginner',
                 updatedAt: new Date().toISOString()
               }
 

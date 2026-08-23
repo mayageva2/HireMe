@@ -44,14 +44,36 @@ const TechFlashcards = () => {
             const res = await fetch(`/api/cv/tech-questions?difficulty=${diff}`, { headers });
             if (res.ok) {
                 const data = await res.json();
-                setQuestions(data);
-                setCurrentIndex(0);
-                setFlipped(false);
+                if (data && data.length > 0) {
+                    setQuestions(data);
+                    setCurrentIndex(0);
+                    setFlipped(false);
+                } else {
+                    setGenerating(true);
+                    const genRes = await fetch('/api/cv/tech-questions/generate', {
+                        method: 'POST',
+                        headers: {
+                            ...headers,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ difficulty: diff })
+                    });
+                    if (genRes.ok) {
+                        const genData = await genRes.json();
+                        if (genData.questions) {
+                            setQuestions(genData.questions);
+                            setCurrentIndex(0);
+                            setFlipped(false);
+                            await fetchProgress();
+                        }
+                    }
+                }
             }
         } catch (err) {
             console.error('Error fetching questions:', err);
         } finally {
             setLoading(false);
+            setGenerating(false);
         }
     };
 
@@ -104,7 +126,7 @@ const TechFlashcards = () => {
         // Optimistically update local progress UI state
         const updatedHistory = {
             ...progress.history,
-            [currentQ.id]: { status, updatedAt: new Date().toISOString() }
+            [currentQ.id]: { status, difficulty, updatedAt: new Date().toISOString() }
         };
         const historyVals = Object.values(updatedHistory);
         const correctCount = historyVals.filter(h => h.status === 'correct').length;
@@ -126,7 +148,8 @@ const TechFlashcards = () => {
                 },
                 body: JSON.stringify({
                     questionId: currentQ.id,
-                    status // 'correct' or 'incorrect'
+                    status, // 'correct' or 'incorrect'
+                    difficulty
                 })
             });
         } catch (err) {
@@ -207,9 +230,10 @@ const TechFlashcards = () => {
                 </div>
             </div>
 
-            {loading ? (
-                <div className="text-center mt-10 text-[#5bf4de] animate-pulse font-bold tracking-wider">
-                    Loading {difficulty} Questions...
+            {loading || generating ? (
+                <div className="text-center mt-10 text-[#5bf4de] animate-pulse font-bold tracking-wider flex flex-col items-center gap-3">
+                    <span className="material-symbols-outlined text-4xl animate-spin">sync</span>
+                    <span>Analyzing CV & Generating Personalized {difficulty} Questions...</span>
                 </div>
             ) : questions.length === 0 ? (
                 <div className="w-full max-w-lg bg-[#12192a] border border-[#424858]/30 rounded-2xl p-8 text-center shadow-2xl flex flex-col items-center justify-center min-h-[300px]">

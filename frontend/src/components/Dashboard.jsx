@@ -88,6 +88,16 @@ const CVThumbnail = React.memo(({ cvData, onShowCV }) => {
     </div>
   );
 });
+const INTERVIEW_TIPS = [
+  "Use the STAR method (Situation, Task, Action, Result) for behavioral questions. Focus 70% of your answer on your specific actions and the quantifiable results.",
+  "When asked a complex problem, think out loud. Interviewers care more about your problem-solving framework and communication style than getting the perfect answer immediately.",
+  "Research the company's recent press releases, product launches, or engineering blogs. Referencing these details during the interview demonstrates genuine interest.",
+  "Always prepare 2-3 thoughtful questions for the end of the interview. Focus on team culture, engineering challenges, or company growth rather than basic logistics.",
+  "Make sure you speak in detail about every project listed on your CV. If you put a skill or technology on your resume, expect to be questioned on it.",
+  "Don't rush to answer. It's completely fine to say, 'That's a great question. Let me take 5 seconds to organize my thoughts.' This projects confidence.",
+  "When discussing achievements, quantify your impact. Instead of saying 'Improved performance,' say 'Reduced API latency by 35%, improving mobile conversion rates by 4%'.",
+  "In system design or operations questions, start with high-level constraints before diving into details. Define the scope and scale of the problem first."
+];
 
 const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV, onShowFeedback, isStartingInterview }) => {
   const [realUser, setRealUser] = useState({ 
@@ -101,6 +111,8 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
   const [cvAnalysis, setCvAnalysis] = useState(null);
   const [loadingCv, setLoadingCv] = useState(true);
   const [interviews, setInterviews] = useState([]);
+  const [hrProgress, setHrProgress] = useState({ history: {}, performanceScore: 0 });
+  const [techProgress, setTechProgress] = useState({ history: {}, activeDifficulty: 'Beginner', performanceScore: 0 });
 
   useEffect(() => {
     async function loadData() {
@@ -131,6 +143,30 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
           const data = await res.json();
           setCvData(data.cv);
           setCvAnalysis(data.analysis);
+        }
+
+        try {
+          const hrRes = await fetch('/api/cv/hr-questions/progress', {
+            headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+          });
+          if (hrRes.ok) {
+            const hrData = await hrRes.json();
+            setHrProgress(hrData);
+          }
+        } catch (hrErr) {
+          console.warn('Could not load HR progress:', hrErr);
+        }
+
+        try {
+          const techRes = await fetch('/api/cv/tech-questions/progress', {
+            headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+          });
+          if (techRes.ok) {
+            const techData = await techRes.json();
+            setTechProgress(techData);
+          }
+        } catch (techErr) {
+          console.warn('Could not load Tech progress:', techErr);
         }
 
         try {
@@ -179,6 +215,67 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
       chart: buildTrendChart(scores.slice().reverse()),
     };
   }, [interviews]);
+
+  const hrCounts = useMemo(() => {
+    let correct = 0;
+    let incorrect = 0;
+    Object.values(hrProgress.history || {}).forEach(val => {
+      if (val.status === 'correct') correct++;
+      else incorrect++;
+    });
+    return { correct, incorrect, total: correct + incorrect };
+  }, [hrProgress]);
+
+  const techCounts = useMemo(() => {
+    let correct = 0;
+    let incorrect = 0;
+    Object.values(techProgress.history || {}).forEach(val => {
+      if (val.status === 'correct') correct++;
+      else incorrect++;
+    });
+    return { correct, incorrect, total: correct + incorrect };
+  }, [techProgress]);
+
+  const techDiffStats = useMemo(() => {
+    const difficulties = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
+    const stats = {};
+    
+    difficulties.forEach(diff => {
+      let total = 0;
+      let correct = 0;
+      
+      Object.entries(techProgress.history || {}).forEach(([id, val]) => {
+        let itemDiff = val.difficulty;
+        if (!itemDiff) {
+          if (id.includes('-j')) itemDiff = 'Beginner';
+          else if (id.includes('-m')) itemDiff = 'Intermediate';
+          else if (id.includes('-s')) itemDiff = 'Advanced';
+          else if (id.includes('-l') || id.includes('expert')) itemDiff = 'Expert';
+          else itemDiff = 'Beginner';
+        }
+        
+        if (itemDiff === diff) {
+          total++;
+          if (val.status === 'correct') {
+            correct++;
+          }
+        }
+      });
+      
+      stats[diff] = {
+        total,
+        correct,
+        percentage: total > 0 ? Math.round((correct / total) * 100) : 0
+      };
+    });
+    
+    return stats;
+  }, [techProgress]);
+
+  const tipOfTheDay = useMemo(() => {
+    const day = new Date().getDate();
+    return INTERVIEW_TIPS[day % INTERVIEW_TIPS.length];
+  }, []);
 
   const handleSuggestionClick = (category) => {
     // Write query parameter to URL history so CVBuilder can catch it on mount
@@ -333,7 +430,7 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           
           {/* LEFT COLUMN */}
-          <div className="md:col-span-3 space-y-6">
+          <div className="md:col-span-3 space-y-6 md:sticky md:top-24 h-fit">
             <div className="p-6 rounded-[16px] border border-[#424858]/20 flex flex-col items-center text-center" style={{ backgroundColor: theme.surface }}>
               <input type="file" ref={fileInputRef} onChange={handlePhotoChange} className="hidden" accept="image/*" />
               <div className="relative mb-4 group cursor-pointer" onClick={handlePhotoClick}>
@@ -378,6 +475,13 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
                   <span className="material-symbols-outlined text-sm text-[#5bf4de]">chevron_right</span>
                 </button>
               </div>
+            </div>
+
+            <div className="p-6 rounded-[16px] border border-[#424858]/20 bg-gradient-to-br from-[#12192a] to-[#1a2333]" style={{ backgroundColor: theme.surface }}>
+              <h4 className="font-bold text-xs uppercase tracking-widest text-[#5bf4de] mb-3">Interview Tip of the Day</h4>
+              <p className="text-xs text-[#e0e5f9] leading-relaxed">
+                {tipOfTheDay}
+              </p>
             </div>
           </div>
 
@@ -461,6 +565,135 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
                   </p>
                 </div>
               )}
+            </div>
+
+            {/* Flashcard Performance Analytics Card */}
+            <div className="p-6 rounded-[16px] border border-[#424858]/20" style={{ backgroundColor: theme.surface }}>
+              <div className="flex items-center justify-between mb-8 border-b border-[#424858]/10 pb-4">
+                <h3 className="font-bold text-sm uppercase tracking-wider text-[#a5abbd]">Flashcards Progress</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={onShowHR}
+                    className="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-[#5bf4de] border border-[#5bf4de]/20 rounded-full hover:bg-[#5bf4de]/10 transition-all"
+                  >
+                    Practice HR
+                  </button>
+                  <button
+                    onClick={onShowTech}
+                    className="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-[#5bf4de] border border-[#5bf4de]/20 rounded-full hover:bg-[#5bf4de]/10 transition-all"
+                  >
+                    Practice Tech
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
+                {/* HR Flashcards circular progress */}
+                <div className="flex items-center gap-4 bg-black/25 p-4 rounded-xl border border-[#424858]/10">
+                  <div className="relative w-16 h-16 shrink-0">
+                    <svg viewBox="0 0 64 64" className="w-full h-full transform -rotate-90">
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="28"
+                        stroke="#1c2a41"
+                        strokeWidth="4.5"
+                        fill="transparent"
+                      />
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="28"
+                        stroke="#5bf4de"
+                        strokeWidth="4.5"
+                        fill="transparent"
+                        strokeDasharray="175.9"
+                        strokeDashoffset={175.9 - (175.9 * (hrProgress.performanceScore || 0)) / 100}
+                        strokeLinecap="round"
+                        className="transition-all duration-1000"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center text-[11px] font-black text-[#5bf4de]">
+                      {hrProgress.performanceScore || 0}%
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] text-[#a5abbd] uppercase font-bold tracking-wider mb-1">HR Behavioral</h4>
+                    <p className="text-white text-xs font-semibold">{hrCounts.total} Answered</p>
+                    <div className="flex gap-2.5 mt-1 text-[9px] text-[#a5abbd] font-bold">
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#5bf4de]"></span>{hrCounts.correct} Right</span>
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>{hrCounts.incorrect} Practice</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tech Flashcards circular progress */}
+                <div className="flex items-center gap-4 bg-black/25 p-4 rounded-xl border border-[#424858]/10">
+                  <div className="relative w-16 h-16 shrink-0">
+                    <svg viewBox="0 0 64 64" className="w-full h-full transform -rotate-90">
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="28"
+                        stroke="#1c2a41"
+                        strokeWidth="4.5"
+                        fill="transparent"
+                      />
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="28"
+                        stroke="#5bf4de"
+                        strokeWidth="4.5"
+                        fill="transparent"
+                        strokeDasharray="175.9"
+                        strokeDashoffset={175.9 - (175.9 * (techProgress.performanceScore || 0)) / 100}
+                        strokeLinecap="round"
+                        className="transition-all duration-1000"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center text-[11px] font-black text-[#5bf4de]">
+                      {techProgress.performanceScore || 0}%
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] text-[#a5abbd] uppercase font-bold tracking-wider mb-1">Technical Skills</h4>
+                    <p className="text-white text-xs font-semibold">{techCounts.total} Answered</p>
+                    <div className="flex gap-2.5 mt-1 text-[9px] text-[#a5abbd] font-bold">
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#5bf4de]"></span>{techCounts.correct} Right</span>
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>{techCounts.incorrect} Practice</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Technical Difficulty Level Breakdown */}
+              <div className="border-t border-[#424858]/10 pt-5">
+                <p className="text-[10px] text-[#a5abbd] uppercase font-black tracking-widest mb-4">Technical Level Mastery</p>
+                <div className="grid grid-cols-2 gap-4">
+                  {['Beginner', 'Intermediate', 'Advanced', 'Expert'].map((level) => {
+                    const stat = techDiffStats[level] || { total: 0, correct: 0, percentage: 0 };
+                    return (
+                      <div key={level} className="bg-black/10 p-3 rounded-lg border border-[#424858]/5">
+                        <div className="flex justify-between items-baseline mb-2">
+                          <span className="text-[10px] font-bold text-[#e0e5f9]">{level}</span>
+                          <span className="text-[9px] font-black text-[#5bf4de]">{stat.percentage}%</span>
+                        </div>
+                        <div className="h-1.5 bg-black/40 rounded-full overflow-hidden mb-1">
+                          <div
+                            className="h-full bg-[#5bf4de] transition-all duration-500"
+                            style={{ width: `${stat.percentage}%` }}
+                          ></div>
+                        </div>
+                        <div className="flex justify-between text-[8px] text-[#a5abbd] font-bold">
+                          <span>{stat.total} attempted</span>
+                          <span>{stat.correct} correct</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             <div className="relative rounded-[16px] overflow-hidden aspect-video bg-black border border-[#424858]/20 group">

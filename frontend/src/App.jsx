@@ -197,7 +197,7 @@ function App() {
             <div className="min-h-screen bg-[#080e1c] pt-20">
               <button 
                 onClick={() => setMainView('dashboard')}
-                className="ml-10 mb-6 flex items-center gap-2 text-[#5bf4de] hover:underline"
+                className="ml-10 mb-6 flex items-center gap-2 text-[#5bf4de] hover:text-[#46eedd] font-bold transition-colors"
               >
                 <span className="material-symbols-outlined">arrow_back</span> Back to Dashboard
               </button>
@@ -207,7 +207,7 @@ function App() {
             <div className="min-h-screen bg-[#080e1c] pt-20">
               <button 
                 onClick={() => setMainView('dashboard')}
-                className="ml-10 mb-6 flex items-center gap-2 text-[#5bf4de] hover:underline"
+                className="ml-10 mb-6 flex items-center gap-2 text-[#5bf4de] hover:text-[#46eedd] font-bold transition-colors"
               >
                 <span className="material-symbols-outlined">arrow_back</span> Back to Dashboard
               </button>
