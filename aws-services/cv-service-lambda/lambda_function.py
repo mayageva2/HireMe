@@ -390,6 +390,170 @@ def parse_cv_text_with_openai(text: str) -> dict:
         print(f"[cv-service-lambda] OpenAI Parse Fallback Triggered. Original Error: {exc}")
         return get_mock_import_fallback()
 
+def get_mock_tech_questions(skills: list, role: str, difficulty: str) -> list:
+    pool = {
+        "react": {
+            "Beginner": [
+                { "id": "mock-react-j1", "question": "What is the difference between props and state in React?", "answer": "Props are read-only properties passed from parent components to child components to configure them. State is local state managed inside the component itself using hooks (e.g., useState) and can change over time based on user interaction or lifecycle events.", "category": "React" },
+                { "id": "mock-react-j2", "question": "What is a React Hook and why do we use them?", "answer": "React Hooks are functions that let functional components use state and lifecycle features (e.g., useState, useEffect). They allow logic reuse, make code cleaner, and avoid class component complexities.", "category": "React" }
+            ],
+            "Intermediate": [
+                { "id": "mock-react-m1", "question": "What is the difference between React.memo and useMemo?", "answer": "React.memo is a higher-order component that memoizes the rendered output of a component to prevent re-renders unless props change. useMemo is a React Hook that memoizes the return value of an expensive calculation function inside a component to avoid recalculating it on every render unless dependencies change.", "category": "React" }
+            ],
+            "Advanced": [
+                { "id": "mock-react-s1", "question": "How does React's Reconciliation algorithm work under the hood?", "answer": "React uses a virtual DOM to optimize updates. When a component's state changes, a new virtual DOM tree is generated. React diffs this tree with the previous one using a heuristic O(n) algorithm. It assumes that elements of different types generate different trees, and keys are used to uniquely identify elements across renders to prevent unnecessary re-mounting.", "category": "React" }
+            ],
+            "Expert": [
+                { "id": "mock-react-l1", "question": "How would you design a migration strategy to move a large, legacy React application to React Server Components (RSC)?", "answer": "A successful migration requires a phased approach: 1. Audit components to categorize them into Client vs Server. 2. Establish a server routing layout (e.g., using Next.js App Router). 3. Migrate leaves of the tree first or top-down shell layout. 4. Use 'use client' directives at state/interaction boundary leaves. 5. Measure performance (FCP, LCP) and bundle sizes to validate benefits.", "category": "React / RSC" }
+            ]
+        },
+        "python": {
+            "Beginner": [
+                { "id": "mock-python-j1", "question": "What is the difference between lists and tuples in Python?", "answer": "Lists are mutable, meaning their elements can be modified after creation, and are defined with brackets []. Tuples are immutable, meaning they cannot be modified after creation, and are defined with parentheses (). Tuples are generally faster and safer for fixed datasets.", "category": "Python" }
+            ],
+            "Intermediate": [
+                { "id": "mock-python-m1", "question": "Explain Python decorators and write a simple execution-time logger decorator.", "answer": "Decorators are functions that modify the behavior of other functions. They take a function as an argument, wrap it, and return a new function.\nExample:\n```python\nimport time\ndef time_logger(func):\n    def wrapper(*args, **kwargs):\n        start = time.time()\n        result = func(*args, **kwargs)\n        print(f'{func.__name__} took {time.time() - start}s')\n        return result\n    return wrapper\n```", "category": "Python" }
+            ],
+            "Advanced": [
+                { "id": "mock-python-s1", "question": "How does Python's Global Interpreter Lock (GIL) affect multi-threaded programs and how do you bypass it?", "answer": "The GIL is a mutex that protects access to Python objects, preventing multiple threads from executing Python bytecodes at once. This makes multi-threaded CPU-bound programs single-threaded. To bypass it, you can use: 1. The `multiprocessing` module (runs separate processes). 2. Alternative implementations like Jython or PyPy (some configurations). 3. C-extensions or libraries like NumPy that release the GIL during heavy computations. 4. Asyncio for I/O-bound tasks.", "category": "Python" }
+            ],
+            "Expert": [
+                { "id": "mock-python-l1", "question": "How would you design a distributed, fault-tolerant background task processing architecture in Python?", "answer": "Use Celery as the task runner, Redis or RabbitMQ as the message broker, and PostgreSQL/DynamoDB for task result storage. Ensure fault tolerance by: 1. Enabling task acknowledgements (`task_acks_late`). 2. Setting dead-letter queues (DLQ) in the broker. 3. Designing tasks to be idempotent. 4. Monitoring with Flower and Prometheus.", "category": "Python / Systems" }
+            ]
+        },
+        "java": {
+            "Beginner": [
+                { "id": "mock-java-j1", "question": "What is the difference between an Interface and an Abstract Class in Java?", "answer": "An interface defines a contract with abstract methods (and default methods in Java 8+), allowing multiple inheritance. An abstract class is a class that cannot be instantiated but can contain state (instance variables) and constructors, and classes can only extend one abstract class.", "category": "Java" }
+            ],
+            "Intermediate": [
+                { "id": "mock-java-m1", "question": "Explain Java's Garbage Collection process and the difference between minor and major GC.", "answer": "JVM heap is split into Young (Eden, Survivor) and Old generations. Minor GC runs on the Young generation to quickly collect short-lived objects. Major GC (or Full GC) cleans the Old generation when it fills up, which is much slower and usually pauses application execution threads (Stop-The-World).", "category": "Java" }
+            ],
+            "Advanced": [
+                { "id": "mock-java-s1", "question": "Describe the Java Memory Model and how the 'volatile' keyword ensures thread safety.", "answer": "The Java Memory Model (JMM) specifies how threads interact through memory. The `volatile` keyword ensures that updates to a variable are immediately written to main memory and read from main memory, preventing local thread caches from holding stale values. It also prevents instruction reordering around the variable.", "category": "Java" }
+            ],
+            "Expert": [
+                { "id": "mock-java-l1", "question": "Design a high-throughput, low-latency API service using Spring Boot.", "answer": "1. Use Spring WebFlux (reactive non-blocking I/O) if applicable, or optimize MVC with virtual threads (Java 21). 2. Implement connection pooling (HikariCP) and tune database parameters. 3. Implement Redis caching for read-heavy operations. 4. Add rate limiting (Bucket4j) and Circuit Breaker (Resilience4j). 5. Tune JVM GC parameters (e.g., use G1GC or ZGC for low pauses).", "category": "Java / Systems" }
+            ]
+        },
+        "general": {
+            "Beginner": [
+                { "id": "mock-gen-j1", "question": "What is the difference between a primary key and a foreign key in a relational database?", "answer": "A primary key uniquely identifies each record in a table and cannot be NULL. A foreign key is a column or group of columns in one table that refers to the primary key in another table, establishing a link and maintaining referential integrity between the tables.", "category": "Databases" },
+                { "id": "mock-gen-j2", "question": "What is Git and how does `git merge` differ from `git rebase`?", "answer": "`git merge` takes all the changes in one branch and merges them into another in a single merge commit, preserving historical commit order and chronology. `git rebase` reapplies your commits on top of another branch, rewriting commit history to create a clean, linear sequence of commits.", "category": "Dev Tools" }
+            ],
+            "Intermediate": [
+                { "id": "mock-gen-m1", "question": "What is the difference between SQL and NoSQL databases, and how do you choose?", "answer": "SQL databases are relational, table-based, have a predefined schema, and scale vertically (e.g., PostgreSQL, MySQL). They are ideal for complex queries and transactional consistency (ACID). NoSQL databases are non-relational, document- or key-value-based, have dynamic schemas, and scale horizontally (e.g., MongoDB, DynamoDB). They are ideal for unstructured data, high write throughput, and rapid development.", "category": "Databases" },
+                { "id": "mock-gen-m2", "question": "What is the purpose of writing unit tests, and how do they differ from integration tests?", "answer": "Unit tests verify that a single unit of code (like a function or class) works correctly in isolation, using mocks/stubs for external dependencies. Integration tests verify that different modules or external services (like a database or API) work correctly together. Unit tests are fast and run frequently, while integration tests are slower but provide higher confidence.", "category": "Testing" }
+            ],
+            "Advanced": [
+                { "id": "mock-gen-s1", "question": "Explain how database indexing (B-Tree indexes) works and how it affects write vs. read performance.", "answer": "A B-Tree index organizes data in a balanced tree structure, enabling binary-like search speeds (O(log N)) for queries. It speeds up SELECT queries significantly. However, it slows down INSERT, UPDATE, and DELETE operations because the database must update the index structures and balance the B-Tree on every modification, in addition to writing the raw data.", "category": "Databases" },
+                { "id": "mock-gen-s2", "question": "What is architectural observability, and what are the three pillars of observability?", "answer": "Observability is the ability to measure a system's internal state based on its external outputs. The three pillars are:\n1. Logs: Detailed, timestamped records of events (best for debugging root causes).\n2. Metrics: Numeric values measured over intervals (best for alerting and monitoring system health, e.g., CPU, error rates).\n3. Traces: End-to-end paths of requests through distributed services (best for latency bottleneck analysis).", "category": "DevOps" }
+            ],
+            "Expert": [
+                { "id": "mock-gen-l1", "question": "How would you design a globally distributed cache system with low latency and eventual consistency?", "answer": "1. Use a CDN for static asset caching. 2. Implement Redis clusters in multiple geographic regions. 3. Use write-through or write-around cache invalidation strategies based on read/write patterns. 4. Implement pub/sub or event queue replication (e.g., Kafka) to propagate cache invalidation events globally. 5. Manage synchronization trade-offs (e.g. read-your-writes consistency via session binding, or eventual consistency with short TTLs).", "category": "System Design" },
+                { "id": "mock-gen-l2", "question": "How do you manage technical debt in a rapidly growing software engineering team?", "answer": "1. Establish clear coding standards and automated linting/CI pipelines. 2. Track technical debt items transparently in the backlog. 3. Allocate a fixed percentage of development capacity (e.g. 15-20%) to maintenance, refactoring, and tooling. 4. Conduct architectural reviews for critical systems. 5. Encourage refactoring as part of feature development ('Boy Scout Rule').", "category": "Engineering Leadership" }
+            ]
+        }
+    }
+
+    matches = []
+    normalized_skills = [s.lower() for s in skills]
+
+    # Check matches
+    if any("react" in s or "javascript" in s or "js" in s or "node" in s for s in normalized_skills):
+        matches.append("react")
+    if any("python" in s or "django" in s or "flask" in s for s in normalized_skills):
+        matches.append("python")
+    if any("java" in s or "spring" in s for s in normalized_skills):
+        matches.append("java")
+
+    selected_questions = []
+    for m in matches:
+        lst = pool.get(m, {}).get(difficulty, [])
+        selected_questions.extend(lst)
+
+    general_list = pool.get("general", {}).get(difficulty, [])
+    gen_index = 0
+    while len(selected_questions) < 5 and gen_index < len(general_list):
+        selected_questions.append(general_list[gen_index])
+        gen_index += 1
+
+    if len(selected_questions) < 5:
+        all_gen = []
+        for diff in ["Beginner", "Intermediate", "Advanced", "Expert"]:
+            all_gen.extend(pool.get("general", {}).get(diff, []))
+        for q in all_gen:
+            if len(selected_questions) >= 5:
+                break
+            if not any(sq["id"] == q["id"] for sq in selected_questions):
+                selected_questions.append(q)
+
+    return selected_questions[:5]
+
+def generate_tech_questions_with_openai(cv_data: dict, role: str, difficulty: str) -> list:
+    """Generate personalized technical questions using OpenAI."""
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        print("[cv-service-lambda] Warning: OPENAI_API_KEY is not set. Using local mock generator.")
+        return None
+
+    model = os.environ.get("OPENAI_MODEL", "gpt-4.1-mini")
+    print(f"[cv-service-lambda] Generating technical questions with OpenAI. Model: {model}")
+
+    system_prompt = f"""You are an expert technical interviewer for the role: "{role}" at the "{difficulty}" expertise level.
+Generate exactly 5 distinct, high-quality technical questions tailored specifically to the candidate's CV and skills.
+
+Candidate CV:
+{json.dumps(cv_data, indent=2)}
+
+Ensure the questions correspond to the requested difficulty tier:
+- Beginner: Focus on core concepts, fundamental principles, and basic terminology.
+- Intermediate: Focus on practical application, standard processes, tools, and direct problem-solving.
+- Advanced: Focus on strategy, design patterns, optimization, and complex scenarios.
+- Expert: Focus on leadership, high-level strategy, trade-offs, global design, and scalability.
+
+You must output a JSON object with exactly the key "questions" containing an array of objects. Each object must have:
+1. "id": A unique string identifier (UUID or random string).
+2. "question": The technical question text.
+3. "answer": A comprehensive, high-quality sample/model answer for the candidate to learn from, including key concepts/strategies and code snippets if applicable.
+4. "category": A short category/topic name (e.g. "React", "Python Concurrency", "System Design", "SQL").
+
+Do not include any markdown formatting, backticks, prefix, or suffix. Output only raw JSON."""
+
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": f"Generate 5 technical questions for difficulty: {difficulty}"}
+        ],
+        "response_format": {"type": "json_object"},
+        "temperature": 0.3
+    }
+
+    req = urllib.request.Request(
+        "https://api.openai.com/v1/chat/completions",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        },
+        method="POST"
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=30) as response:
+            res_body = response.read().decode("utf-8")
+            data = json.loads(res_body)
+
+        content = data.get("choices", [{}])[0].get("message", {}).get("content")
+        if not content:
+            raise ValueError("OpenAI returned an empty response")
+
+        parsed = json.loads(content)
+        return parsed.get("questions") or []
+    except Exception as e:
+        print(f"[cv-service-lambda] OpenAI tech questions API request failed: {e}")
+        return None
+
 def get_cognito_jwks(region, user_pool_id):
     """Fetch and cache Cognito JWKS keys."""
     global COGNITO_JWKS
@@ -504,6 +668,244 @@ def lambda_handler(event, context):
         is_polish_path = path.endswith("/polish")
         is_import_path = path.endswith("/import")
         is_interviews_path = path.endswith("/interviews")
+        is_tech_questions = "/tech-questions" in path
+        is_hr_questions = "/hr-questions" in path
+
+        # --- HR QUESTIONS PROGRESS ENDPOINTS ---
+        if is_hr_questions:
+            import datetime
+            # 1. GET /progress
+            if method == "GET" and path.endswith("/progress"):
+                response = table.get_item(
+                    Key={
+                        "User id": username,
+                        "Sort Key": "hr-questions#progress"
+                    }
+                )
+                item = response.get("Item") or {}
+                progress = item.get("progress") or {
+                    "history": {},
+                    "performanceScore": 0
+                }
+                return {
+                    "statusCode": 200,
+                    "headers": CORS_HEADERS,
+                    "body": json.dumps(progress, cls=DecimalEncoder)
+                }
+
+            # 2. POST /submit
+            if method == "POST" and path.endswith("/submit"):
+                body_str = event.get("body") or ""
+                if event.get("isBase64Encoded"):
+                    body_str = base64.b64decode(body_str).decode("utf-8")
+                body_json = json.loads(body_str) if body_str else {}
+                question_id = body_json.get("questionId")
+                status = body_json.get("status")
+
+                if not question_id or not status:
+                    return {
+                        "statusCode": 400,
+                        "headers": CORS_HEADERS,
+                        "body": json.dumps({"error": "questionId and status are required"})
+                    }
+
+                response = table.get_item(
+                    Key={
+                        "User id": username,
+                        "Sort Key": "hr-questions#progress"
+                    }
+                )
+                item = response.get("Item") or {}
+                progress = item.get("progress") or {
+                    "history": {},
+                    "performanceScore": 0
+                }
+
+                history = progress.get("history") or {}
+                history[question_id] = {
+                    "status": status,
+                    "updatedAt": datetime.datetime.utcnow().isoformat() + "Z"
+                }
+                progress["history"] = history
+
+                history_vals = list(history.values())
+                correct_count = len([h for h in history_vals if h.get("status") == "correct"])
+                total_count = len(history_vals)
+                progress["performanceScore"] = int(round((correct_count / total_count) * 100)) if total_count > 0 else 0
+
+                table.put_item(
+                    Item={
+                        "User id": username,
+                        "Sort Key": "hr-questions#progress",
+                        "progress": progress
+                    }
+                )
+
+                return {
+                    "statusCode": 200,
+                    "headers": CORS_HEADERS,
+                    "body": json.dumps({"success": True, "progress": progress}, cls=DecimalEncoder)
+                }
+
+        # --- TECHNICAL QUESTIONS ENDPOINTS ---
+        if is_tech_questions:
+            import datetime
+            # 1. GET /progress
+            if method == "GET" and path.endswith("/progress"):
+                response = table.get_item(
+                    Key={
+                        "User id": username,
+                        "Sort Key": "tech-questions#progress"
+                    }
+                )
+                item = response.get("Item") or {}
+                progress = item.get("progress") or {
+                    "history": {},
+                    "activeDifficulty": "Beginner",
+                    "performanceScore": 0
+                }
+                return {
+                    "statusCode": 200,
+                    "headers": CORS_HEADERS,
+                    "body": json.dumps(progress, cls=DecimalEncoder)
+                }
+
+            # 2. POST /submit
+            if method == "POST" and path.endswith("/submit"):
+                body_str = event.get("body") or ""
+                if event.get("isBase64Encoded"):
+                    body_str = base64.b64decode(body_str).decode("utf-8")
+                body_json = json.loads(body_str) if body_str else {}
+                question_id = body_json.get("questionId")
+                status = body_json.get("status")
+
+                if not question_id or not status:
+                    return {
+                        "statusCode": 400,
+                        "headers": CORS_HEADERS,
+                        "body": json.dumps({"error": "questionId and status are required"})
+                    }
+
+                response = table.get_item(
+                    Key={
+                        "User id": username,
+                        "Sort Key": "tech-questions#progress"
+                    }
+                )
+                item = response.get("Item") or {}
+                progress = item.get("progress") or {
+                    "history": {},
+                    "activeDifficulty": "Beginner",
+                    "performanceScore": 0
+                }
+
+                difficulty = body_json.get("difficulty") or progress.get("activeDifficulty") or "Beginner"
+                history = progress.get("history") or {}
+                history[question_id] = {
+                    "status": status,
+                    "difficulty": difficulty,
+                    "updatedAt": datetime.datetime.utcnow().isoformat() + "Z"
+                }
+                progress["history"] = history
+
+                history_vals = list(history.values())
+                correct_count = len([h for h in history_vals if h.get("status") == "correct"])
+                total_count = len(history_vals)
+                progress["performanceScore"] = int(round((correct_count / total_count) * 100)) if total_count > 0 else 0
+
+                table.put_item(
+                    Item={
+                        "User id": username,
+                        "Sort Key": "tech-questions#progress",
+                        "progress": progress
+                    }
+                )
+
+                return {
+                    "statusCode": 200,
+                    "headers": CORS_HEADERS,
+                    "body": json.dumps({"success": True, "progress": progress}, cls=DecimalEncoder)
+                }
+
+            # 3. POST /generate
+            if method == "POST" and path.endswith("/generate"):
+                body_str = event.get("body") or ""
+                if event.get("isBase64Encoded"):
+                    body_str = base64.b64decode(body_str).decode("utf-8")
+                body_json = json.loads(body_str) if body_str else {}
+                difficulty = body_json.get("difficulty", "Beginner")
+
+                cv_response = table.get_item(
+                    Key={
+                        "User id": username,
+                        "Sort Key": "cv"
+                    }
+                )
+                cv_item = cv_response.get("Item") or {}
+                cv_data = cv_item.get("cv") or {}
+                skills = cv_data.get("skills") or []
+                personal_info = cv_data.get("personalInfo") or {}
+                summary = personal_info.get("summary") or ""
+                role = summary.split(".")[0] if summary else personal_info.get("fullName") or "Software Engineer"
+
+                questions = generate_tech_questions_with_openai(cv_data, role, difficulty)
+                if not questions:
+                    questions = get_mock_tech_questions(skills, role, difficulty)
+
+                table.put_item(
+                    Item={
+                        "User id": username,
+                        "Sort Key": f"tech-questions#{difficulty}",
+                        "questions": questions
+                    }
+                )
+
+                progress_response = table.get_item(
+                    Key={
+                        "User id": username,
+                        "Sort Key": "tech-questions#progress"
+                    }
+                )
+                progress_item = progress_response.get("Item") or {}
+                progress = progress_item.get("progress") or {
+                    "history": {},
+                    "activeDifficulty": "Beginner",
+                    "performanceScore": 0
+                }
+                progress["activeDifficulty"] = difficulty
+                table.put_item(
+                    Item={
+                        "User id": username,
+                        "Sort Key": "tech-questions#progress",
+                        "progress": progress
+                    }
+                )
+
+                return {
+                    "statusCode": 200,
+                    "headers": CORS_HEADERS,
+                    "body": json.dumps({"success": True, "questions": questions}, cls=DecimalEncoder)
+                }
+
+            # 4. GET / (list questions for a specific difficulty)
+            if method == "GET":
+                query_params = event.get("queryStringParameters") or {}
+                difficulty = query_params.get("difficulty", "Beginner") if query_params else "Beginner"
+
+                response = table.get_item(
+                    Key={
+                        "User id": username,
+                        "Sort Key": f"tech-questions#{difficulty}"
+                    }
+                )
+                item = response.get("Item") or {}
+                questions = item.get("questions") or []
+
+                return {
+                    "statusCode": 200,
+                    "headers": CORS_HEADERS,
+                    "body": json.dumps(questions, cls=DecimalEncoder)
+                }
 
         # --- GET /interviews: Interview feedback history written by the agent ---
         if method == "GET" and is_interviews_path:

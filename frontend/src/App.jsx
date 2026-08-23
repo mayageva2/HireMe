@@ -3,6 +3,7 @@ import { Login, SignUp, getCurrentUser, logout } from './AuthComponents';
 import Dashboard from './components/Dashboard';
 import InterviewPage from './InterviewPage';
 import HRFlashcards from './components/HRFlashCards';
+import TechFlashcards from './components/TechFlashCards';
 import CVBuilder from './components/CVBuilder';
 import InterviewFeedback from './components/InterviewFeedback';
 import { AVATAR_CONTEXT_URL, LIVEKIT_TOKEN_URL } from './config';
@@ -187,6 +188,7 @@ function App() {
               onStartInterview={handleStartInterview}
               isStartingInterview={isStartingInterview}
               onShowHR={() => setMainView('hr_questions')} 
+              onShowTech={() => setMainView('tech_questions')}
               onShowCV={() => setMainView('cv_builder')}
               onShowFeedback={handleShowFeedbackHistory}
               onLogout={handleLogout}
@@ -195,11 +197,39 @@ function App() {
             <div className="min-h-screen bg-[#080e1c] pt-20">
               <button 
                 onClick={() => setMainView('dashboard')}
-                className="ml-10 mb-6 flex items-center gap-2 text-[#5bf4de] hover:underline"
+                className="ml-10 mb-6 flex items-center gap-2 text-[#5bf4de] font-bold transition-all duration-300"
+                style={{ transition: 'all 0.3s ease' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.filter = 'drop-shadow(0 0 8px #5bf4de)';
+                  e.currentTarget.style.color = '#ffffff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.filter = 'none';
+                  e.currentTarget.style.color = '#5bf4de';
+                }}
               >
                 <span className="material-symbols-outlined">arrow_back</span> Back to Dashboard
               </button>
               <HRFlashcards />
+            </div>
+          ) : mainView === 'tech_questions' ? (
+            <div className="min-h-screen bg-[#080e1c] pt-20">
+              <button 
+                onClick={() => setMainView('dashboard')}
+                className="ml-10 mb-6 flex items-center gap-2 text-[#5bf4de] font-bold transition-all duration-300"
+                style={{ transition: 'all 0.3s ease' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.filter = 'drop-shadow(0 0 8px #5bf4de)';
+                  e.currentTarget.style.color = '#ffffff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.filter = 'none';
+                  e.currentTarget.style.color = '#5bf4de';
+                }}
+              >
+                <span className="material-symbols-outlined">arrow_back</span> Back to Dashboard
+              </button>
+              <TechFlashcards />
             </div>
           ) : mainView === 'cv_builder' ? (
             <CVBuilder
