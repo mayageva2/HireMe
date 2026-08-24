@@ -1,0 +1,18 @@
+services:
+  agent:
+    build: 
+      context: ./hireme-agent
+      dockerfile: Dockerfile
+    environment:
+      - LIVEKIT_URL=wss://hireme-khyjrqi7.livekit.cloud
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4.1-mini}
+      - SIMLI_API_KEY=${SIMLI_API_KEY}
+      - SIMLI_FACE_ID=${SIMLI_FACE_ID}
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}  
+      - CARTESIA_API_KEY=${CARTESIA_API_KEY}  
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - DYNAMODB_TABLE=${DYNAMODB_TABLE:-HireMe_Table}

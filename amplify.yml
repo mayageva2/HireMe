@@ -1,0 +1,42 @@
+version: 1
+applications:
+  - appRoot: .
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - nvm install 22
+            - nvm use 22
+            - npm ci
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: frontend/dist
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
+      redirects:
+        - source: '/api/avatar-context'
+          target: 'https://tiqv7tglmz2hb4qmpjrimr5pge0anuak.lambda-url.us-east-1.on.aws/'
+          status: '200'
+        - source: '/api/avatar-context/<*>'
+          target: 'https://tiqv7tglmz2hb4qmpjrimr5pge0anuak.lambda-url.us-east-1.on.aws/<*>'
+          status: '200'
+        - source: '/api/livekit-token'
+          target: 'https://iexzogfkyuunk7b5sunmodusay0whgku.lambda-url.us-east-1.on.aws/'
+          status: '200'
+        - source: '/api/livekit-token/<*>'
+          target: 'https://iexzogfkyuunk7b5sunmodusay0whgku.lambda-url.us-east-1.on.aws/<*>'
+          status: '200'
+        - source: '/api/cv'
+          target: 'https://osvjaexyr7.execute-api.us-east-1.amazonaws.com/prod/cv'
+          status: '200'
+        - source: '/api/cv/<*>'
+          target: 'https://osvjaexyr7.execute-api.us-east-1.amazonaws.com/prod/cv/<*>'
+          status: '200'
+        - source: '/<*>'
+          target: '/index.html'
+          status: '404-200'

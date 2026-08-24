@@ -1,0 +1,27 @@
+# --- HireMe Lambda GitIgnore ---
+
+# התקנות מקומיות של ספריות (התיקייה שאנחנו אורזים ל-ZIP)
+*/package/
+site-packages/
+env/
+venv/
+auth_token/
+
+# קבצי ZIP של Deployment (אין צורך לשמור אותם ב-Git, הם נוצרים מהקוד)
+*.zip
+
+# קבצי סביבה וסודות (קריטי - לעולם לא להעלות מפתחות!)
+.env
+.aws/
+credentials
+*.pem
+
+# קבצי פייתון זמניים
+__pycache__/
+*.py[cod]
+*$py.class
+
+# קבצי מערכת ו-IDE
+.DS_Store
+.vscode/
+.idea/

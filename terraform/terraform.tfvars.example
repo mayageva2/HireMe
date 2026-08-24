@@ -1,0 +1,34 @@
+aws_region = "us-east-1"
+
+# Leave empty to use environment credentials (AWS Academy lab session).
+# Set a name only if you keep a named profile in ~/.aws/credentials.
+aws_profile = ""
+
+project_name = "hireme"
+environment  = "lab"
+
+# Normal AWS account: Terraform creates the Lambda role. Hosting matches the
+# lab: Amplify serves the React app and rewrites /api/* to API Gateway.
+create_lambda_role = true
+enable_amplify     = true
+enable_cloudfront  = false
+
+# Set connect_github = true with a token to let Terraform attach the repo and
+# create the branch. Otherwise connect the repo in the Amplify console.
+connect_github      = false
+github_repository   = "https://github.com/MayaandMayOrganization/HireMe"
+github_access_token = ""
+amplify_branch_name = "may-dev"
+
+# AWS Academy: IAM role creation is blocked. Use:
+#   create_lambda_role = false
+academy_role_name = "LabRole"
+lambda_role_arn   = null
+
+livekit_url        = "wss://your-project.livekit.cloud"
+livekit_api_key    = "replace-me"
+livekit_api_secret = "replace-me"
+
+# Optional: leave empty to use the CV service's mock fallback.
+openai_api_key = ""
+openai_model   = "gpt-4.1-mini"

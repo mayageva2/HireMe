@@ -1,0 +1,117 @@
+/* App shell (replaces styled-components in App.jsx) */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+.app-root {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+}
+
+.app-form-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 2rem;
+  z-index: 2;
+  background: #080e1c;
+}
+
+@media (min-width: 1024px) {
+  .app-form-section {
+    width: 40%;
+    padding: 0 4rem;
+  }
+}
+
+.app-video-section {
+  display: none;
+  position: relative;
+  background: #000;
+  height: 100%;
+}
+
+@media (min-width: 1024px) {
+  .app-video-section {
+    display: block;
+    flex: 1;
+  }
+}
+
+.app-video-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, #080e1c, transparent 40%);
+  z-index: 1;
+}
+
+/* Auth form (replaces styled-components in AuthComponents.jsx) */
+.auth-field-group {
+  margin-bottom: 1.2rem;
+}
+
+.auth-label {
+  font-size: 0.7rem;
+  color: #a5abbd;
+  display: block;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 0.85rem;
+  background: #000;
+  border: 1px solid #424858;
+  border-radius: 10px;
+  color: white;
+  font-size: 0.95rem;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: #5bf4de;
+}
+
+.auth-primary-btn {
+  width: 100%;
+  padding: 0.85rem;
+  background: linear-gradient(to right, #5bf4de, #11c9b4);
+  color: #003a33;
+  font-weight: 800;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: transform 0.1s;
+}
+
+.auth-primary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-primary-btn:active {
+  transform: scale(0.98);
+}
