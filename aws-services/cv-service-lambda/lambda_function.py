@@ -456,7 +456,14 @@ def get_mock_tech_questions(skills: list, role: str, difficulty: str) -> list:
     }
 
     matches = []
-    normalized_skills = [s.lower() for s in skills]
+    normalized_skills = []
+    for s in skills:
+        if isinstance(s, str):
+            normalized_skills.append(s.lower())
+        elif isinstance(s, dict) and "name" in s:
+            normalized_skills.append(str(s["name"]).lower())
+        elif s:
+            normalized_skills.append(str(s).lower())
 
     # Check matches
     if any("react" in s or "javascript" in s or "js" in s or "node" in s for s in normalized_skills):
@@ -684,7 +691,7 @@ def lambda_handler(event, context):
         if is_hr_questions:
             import datetime
             # 1. GET /progress
-            if method == "GET" and path.endswith("/progress"):
+            if method == "GET" and path.rstrip("/").endswith("/progress"):
                 response = table.get_item(
                     Key={
                         "User id": username,
@@ -692,9 +699,10 @@ def lambda_handler(event, context):
                     }
                 )
                 item = response.get("Item") or {}
-                progress = item.get("progress") or {
-                    "history": {},
-                    "performanceScore": 0
+                progress_raw = item.get("progress") or {}
+                progress = {
+                    "history": progress_raw.get("history") or {},
+                    "performanceScore": int(progress_raw.get("performanceScore") or 0)
                 }
                 return {
                     "statusCode": 200,
@@ -703,7 +711,7 @@ def lambda_handler(event, context):
                 }
 
             # 2. POST /submit
-            if method == "POST" and path.endswith("/submit"):
+            if method == "POST" and path.rstrip("/").endswith("/submit"):
                 body_str = event.get("body") or ""
                 if event.get("isBase64Encoded"):
                     body_str = base64.b64decode(body_str).decode("utf-8")
@@ -725,9 +733,10 @@ def lambda_handler(event, context):
                     }
                 )
                 item = response.get("Item") or {}
-                progress = item.get("progress") or {
-                    "history": {},
-                    "performanceScore": 0
+                progress_raw = item.get("progress") or {}
+                progress = {
+                    "history": progress_raw.get("history") or {},
+                    "performanceScore": int(progress_raw.get("performanceScore") or 0)
                 }
 
                 history = progress.get("history") or {}
@@ -760,7 +769,7 @@ def lambda_handler(event, context):
         if is_tech_questions:
             import datetime
             # 1. GET /progress
-            if method == "GET" and path.endswith("/progress"):
+            if method == "GET" and path.rstrip("/").endswith("/progress"):
                 response = table.get_item(
                     Key={
                         "User id": username,
@@ -768,10 +777,11 @@ def lambda_handler(event, context):
                     }
                 )
                 item = response.get("Item") or {}
-                progress = item.get("progress") or {
-                    "history": {},
-                    "activeDifficulty": "Beginner",
-                    "performanceScore": 0
+                progress_raw = item.get("progress") or {}
+                progress = {
+                    "history": progress_raw.get("history") or {},
+                    "activeDifficulty": progress_raw.get("activeDifficulty") or "Beginner",
+                    "performanceScore": int(progress_raw.get("performanceScore") or 0)
                 }
                 return {
                     "statusCode": 200,
@@ -780,7 +790,7 @@ def lambda_handler(event, context):
                 }
 
             # 2. POST /submit
-            if method == "POST" and path.endswith("/submit"):
+            if method == "POST" and path.rstrip("/").endswith("/submit"):
                 body_str = event.get("body") or ""
                 if event.get("isBase64Encoded"):
                     body_str = base64.b64decode(body_str).decode("utf-8")
@@ -802,10 +812,11 @@ def lambda_handler(event, context):
                     }
                 )
                 item = response.get("Item") or {}
-                progress = item.get("progress") or {
-                    "history": {},
-                    "activeDifficulty": "Beginner",
-                    "performanceScore": 0
+                progress_raw = item.get("progress") or {}
+                progress = {
+                    "history": progress_raw.get("history") or {},
+                    "activeDifficulty": progress_raw.get("activeDifficulty") or "Beginner",
+                    "performanceScore": int(progress_raw.get("performanceScore") or 0)
                 }
 
                 difficulty = body_json.get("difficulty") or progress.get("activeDifficulty") or "Beginner"
@@ -837,7 +848,7 @@ def lambda_handler(event, context):
                 }
 
             # 3. POST /generate
-            if method == "POST" and path.endswith("/generate"):
+            if method == "POST" and path.rstrip("/").endswith("/generate"):
                 body_str = event.get("body") or ""
                 if event.get("isBase64Encoded"):
                     body_str = base64.b64decode(body_str).decode("utf-8")
@@ -880,10 +891,11 @@ def lambda_handler(event, context):
                     }
                 )
                 progress_item = progress_response.get("Item") or {}
-                progress = progress_item.get("progress") or {
-                    "history": {},
-                    "activeDifficulty": "Beginner",
-                    "performanceScore": 0
+                progress_raw = progress_item.get("progress") or {}
+                progress = {
+                    "history": progress_raw.get("history") or {},
+                    "activeDifficulty": progress_raw.get("activeDifficulty") or "Beginner",
+                    "performanceScore": int(progress_raw.get("performanceScore") or 0)
                 }
                 progress["activeDifficulty"] = difficulty
                 table.put_item(

@@ -76,7 +76,11 @@ function getMockTechQuestions(skills = [], role = "Software Engineer", difficult
   };
 
   const matches = [];
-  const normalizedSkills = skills.map(s => s.toLowerCase());
+  const normalizedSkills = skills.map(s => {
+    if (typeof s === 'string') return s.toLowerCase();
+    if (s && typeof s === 'object' && s.name) return String(s.name).toLowerCase();
+    return String(s).toLowerCase();
+  });
   
   if (normalizedSkills.some(s => s.includes('react') || s.includes('javascript') || s.includes('js') || s.includes('node'))) {
     matches.push('react');
