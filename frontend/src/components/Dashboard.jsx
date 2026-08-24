@@ -104,7 +104,8 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
     fullName: 'Loading...', 
     profession: 'Loading...', 
     initials: '??',
-    emailVerified: false
+    emailVerified: false,
+    userId: null
   });
   const [profileImg, setProfileImg] = useState(null);
   const fileInputRef = useRef(null);
@@ -126,13 +127,21 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
           ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
           : fullName.substring(0, 2).toUpperCase();
         const emailVerified = attributes['email_verified'] === 'true';
+        const email = attributes['email'] || "";
+        const userId = attributes['sub'] || email || fullName;
 
         setRealUser({ 
           fullName: fullName, 
           profession: profession, 
           initials: initials,
-          emailVerified: emailVerified
+          emailVerified: emailVerified,
+          userId: userId
         });
+
+        const storedImg = localStorage.getItem(`hireme_profile_image_${userId}`);
+        if (storedImg) {
+          setProfileImg(storedImg);
+        }
 
         // Fetch real CV details and AI analysis feedback
         const session = await fetchAuthSession();
@@ -179,7 +188,11 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
         }
       } catch (error) {
         console.error("Error loading dashboard data:", error);
-        setRealUser({ fullName: "Guest User", profession: "Guest", initials: "GU" });
+        setRealUser({ fullName: "Guest User", profession: "Guest", initials: "GU", userId: "guest" });
+        const storedImg = localStorage.getItem(`hireme_profile_image_guest`);
+        if (storedImg) {
+          setProfileImg(storedImg);
+        }
       } finally {
         setLoadingCv(false);
       }
@@ -298,7 +311,10 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfileImg(reader.result);
+        const base64Str = reader.result;
+        setProfileImg(base64Str);
+        const currentUserId = realUser?.userId || "guest";
+        localStorage.setItem(`hireme_profile_image_${currentUserId}`, base64Str);
       };
       reader.readAsDataURL(file);
     }
