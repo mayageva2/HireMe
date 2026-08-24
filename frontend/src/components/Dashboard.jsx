@@ -103,7 +103,8 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
   const [realUser, setRealUser] = useState({ 
     fullName: 'Loading...', 
     profession: 'Loading...', 
-    initials: '??' 
+    initials: '??',
+    emailVerified: false
   });
   const [profileImg, setProfileImg] = useState(null);
   const fileInputRef = useRef(null);
@@ -124,11 +125,13 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
         const initials = nameParts.length >= 2 
           ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
           : fullName.substring(0, 2).toUpperCase();
+        const emailVerified = attributes['email_verified'] === 'true';
 
         setRealUser({ 
           fullName: fullName, 
           profession: profession, 
-          initials: initials 
+          initials: initials,
+          emailVerified: emailVerified
         });
 
         // Fetch real CV details and AI analysis feedback
@@ -319,6 +322,72 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
   const totalMastered = hrCounts.correct + techCounts.correct;
   const globalEfficiency = totalReviewed > 0 ? Math.round((totalMastered / totalReviewed) * 100) : 0;
 
+  const resolvedPath = useMemo(() => {
+    let role = "Candidate";
+    let isDefaultTech = false;
+
+    if (realUser.fullName === "Guest User") {
+      role = "Guest";
+    } else if (realUser.profession && realUser.profession !== "Professional" && realUser.profession !== "Software Engineer" && realUser.profession !== "Loading...") {
+      role = realUser.profession;
+    } else if (cvData?.experience?.[0]?.role) {
+      role = cvData.experience[0].role;
+    } else if (cvData?.personalInfo?.summary) {
+      const summaryFirstSentence = cvData.personalInfo.summary.split(/[.!?]/)[0] || "";
+      if (summaryFirstSentence.length > 0 && summaryFirstSentence.length < 50) {
+        role = summaryFirstSentence.trim();
+      } else {
+        role = "Professional";
+      }
+    } else {
+      role = realUser.profession || "Software Engineer";
+      if (role === "Loading...") {
+        role = "Software Engineer";
+      }
+      isDefaultTech = true;
+    }
+
+    // Dynamic Industry resolution
+    let industry = "General Career";
+    const allSkills = Array.isArray(cvData?.skills) 
+      ? cvData.skills.map(s => typeof s === 'string' ? s.toLowerCase() : (s?.name || '').toLowerCase())
+      : [];
+
+    const techKeywords = ['react', 'node', 'python', 'java', 'c++', 'aws', 'docker', 'javascript', 'css', 'html', 'git', 'software', 'programming', 'developer', 'engineer', 'devops'];
+    const financeKeywords = ['accounting', 'finance', 'tax', 'audit', 'ledger', 'invoice', 'billing', 'excel', 'accountant'];
+
+    const hasTechSkills = allSkills.some(s => techKeywords.some(keyword => s.includes(keyword))) || isDefaultTech;
+    const hasFinanceSkills = allSkills.some(s => financeKeywords.some(keyword => s.includes(keyword)));
+
+    if (hasTechSkills) {
+      industry = "Technology & Software";
+    } else if (hasFinanceSkills) {
+      industry = "Finance & Accounting";
+    } else if (cvData?.experience?.some(exp => exp.company?.toLowerCase().includes("accounting") || exp.role?.toLowerCase().includes("accountant"))) {
+      industry = "Finance & Accounting";
+    }
+
+    return { role, industry };
+  }, [realUser, cvData]);
+
+  const progressScore = useMemo(() => {
+    if (realUser.fullName === "Guest User") return 0;
+    
+    let score = 10; // 10% base for active Cognito account
+    if (cvData) {
+      score += 30; // 30% for CV Draft
+    }
+    if (cvAnalysis) {
+      score += 20; // 20% for AI CV Review
+    }
+    // Up to 20% for flashcard practice: 2% per question, max 10 questions = 20%
+    score += Math.min(20, totalReviewed * 2);
+    // Up to 20% for mock interviews: 10% per interview, max 2 interviews = 20%
+    score += Math.min(20, interviews.length * 10);
+    
+    return score;
+  }, [realUser, cvData, cvAnalysis, totalReviewed, interviews]);
+
   return (
     <div className="min-h-screen text-[#e0e5f9] font-inter overflow-y-auto" style={{ backgroundColor: theme.background }}>
       <style>{`
@@ -444,25 +513,38 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
                     <span className="material-symbols-outlined text-white text-2xl">photo_camera</span>
                   </div>
                 </div>
-                <div className="absolute -bottom-2 right-0 bg-[#5bf4de] text-[#080e1c] px-2 py-0.5 rounded text-[9px] font-black">VERIFIED</div>
+                {realUser.fullName !== "Guest User" ? (
+                  <div className="absolute -bottom-2 right-0 bg-[#5bf4de] text-[#080e1c] px-2 py-0.5 rounded text-[9px] font-black">
+                    {realUser.emailVerified ? "VERIFIED" : "ACTIVE"}
+                  </div>
+                ) : (
+                  <div className="absolute -bottom-2 right-0 bg-[#a5abbd] text-[#080e1c] px-2 py-0.5 rounded text-[9px] font-black">
+                    GUEST
+                  </div>
+                )}
               </div>
               <h2 className="text-xl font-black">{realUser.fullName}</h2>
               <p className="text-[#a5abbd] text-xs mb-6 uppercase tracking-wider font-bold">
-                {realUser.profession}
+                {resolvedPath.role}
               </p>
               <div className="w-full space-y-2 mb-8">
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
                   <span className="text-[#a5abbd]">progress</span>
-                  <span className="text-[#5bf4de]">82%</span>
+                  <span className="text-[#5bf4de]">{progressScore}%</span>
                 </div>
                 <div className="h-1.5 bg-black/40 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#5bf4de]" style={{ width: '82%' }}></div>
+                  <div className="h-full bg-[#5bf4de]" style={{ width: `${progressScore}%` }}></div>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2 w-full pt-4 border-t border-[#424858]/20">
                 <div><p className="text-lg font-black text-[#5bf4de]">{interviewStats?.count ?? 0}</p><p className="text-[8px] text-[#a5abbd] uppercase font-bold">Interviews</p></div>
-                <div className="border-x border-[#424858]/20"><p className="text-lg font-black text-[#5bf4de]">04</p><p className="text-[8px] text-[#a5abbd] uppercase font-bold">Offers</p></div>
+                <div className="border-x border-[#424858]/20">
+                  <p className="text-lg font-black text-[#5bf4de]">
+                    {String(totalMastered).padStart(2, '0')}
+                  </p>
+                  <p className="text-[8px] text-[#a5abbd] uppercase font-bold">Mastered</p>
+                </div>
                 <div><p className="text-lg font-black text-[#5bf4de]">{interviewStats?.averageScore ?? '—'}</p><p className="text-[8px] text-[#a5abbd] uppercase font-bold">Avg Score</p></div>
               </div>
             </div>
@@ -689,18 +771,24 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
               </div>
               <div className="absolute bottom-4 left-4 z-30 text-left">
                 <p className="text-white font-bold text-sm tracking-tight">Ava (AI)</p>
-                <p className="text-[#5bf4de] text-[10px] font-bold tracking-widest">FAANG SPECIALIST</p>
+                <p className="text-[#5bf4de] text-[10px] font-bold tracking-widest">
+                  {resolvedPath.industry === "Technology & Software" ? "FAANG SPECIALIST" : 
+                   resolvedPath.industry === "Finance & Accounting" ? "FINANCIAL SPECIALIST" : 
+                   "CAREER SPECIALIST"}
+                </p>
               </div>
             </div>
 
-            {interviews.length > 0 && (
-              <div className="p-6 rounded-[16px] border border-[#424858]/20" style={{ backgroundColor: theme.surface }}>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-sm uppercase tracking-wider text-[#a5abbd]">Recent Sessions</h3>
+            <div className="p-6 rounded-[16px] border border-[#424858]/20" style={{ backgroundColor: theme.surface }}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-sm uppercase tracking-wider text-[#a5abbd]">Recent Sessions</h3>
+                {interviews.length > 0 && (
                   <button onClick={onShowFeedback} className="text-[10px] font-black uppercase tracking-wider text-[#5bf4de] hover:underline">
                     View all
                   </button>
-                </div>
+                )}
+              </div>
+              {interviews.length > 0 ? (
                 <div className="space-y-2">
                   {interviews.slice(0, 4).map((session) => {
                     const score = Number(session.feedback?.overallScore) || 0;
@@ -722,8 +810,13 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
                     );
                   })}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="flex flex-col items-center text-center py-4 text-[#a5abbd]">
+                  <span className="material-symbols-outlined text-3xl mb-2 opacity-25">history</span>
+                  <p className="text-xs font-semibold">No recent sessions recorded</p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* RIGHT COLUMN */}
