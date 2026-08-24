@@ -97,7 +97,7 @@ function AnalyzingState({ attempt, onBack }) {
       </p>
       {attempt > 8 && (
         <p className="text-xs text-[#a5abbd]/70 mt-4 max-w-[420px]">
-          Still working. If this does not finish, the interview may have been too short to score.
+          Still working. Sessions with fewer than two answers are not scored.
         </p>
       )}
       <button
@@ -306,6 +306,7 @@ const InterviewFeedback = ({ roomName, onBack, onLogout }) => {
   // Only wait for a fresh report when we just came out of an interview.
   const [isWaitingForFresh, setIsWaitingForFresh] = useState(Boolean(roomName));
   const [freshMissing, setFreshMissing] = useState(false);
+  const [freshEstimated, setFreshEstimated] = useState(false);
   const timerRef = useRef(null);
 
   const load = useCallback(async () => {
@@ -329,14 +330,17 @@ const InterviewFeedback = ({ roomName, onBack, onLogout }) => {
         if (cancelled) return;
 
         const fresh = roomName ? interviews.find((item) => item.room === roomName) : null;
-        if (!roomName || fresh) {
+        // The agent saves an estimate as soon as the call ends, then replaces it with
+        // the graded report, so keep waiting until the graded one lands.
+        if (!roomName || (fresh && !fresh.feedback?.isMockFallback)) {
           finish(interviews, fresh?.id);
           return;
         }
 
         if (currentAttempt >= MAX_POLL_ATTEMPTS) {
-          setFreshMissing(true);
-          finish(interviews, null);
+          setFreshMissing(!fresh);
+          setFreshEstimated(Boolean(fresh));
+          finish(interviews, fresh?.id);
           return;
         }
 
@@ -362,7 +366,10 @@ const InterviewFeedback = ({ roomName, onBack, onLogout }) => {
   const selected = sessions.find((item) => item.id === selectedId) || sessions[0] || null;
 
   return (
-    <div className="min-h-screen text-[#e0e5f9] font-inter" style={{ backgroundColor: theme.background }}>
+    <div
+      className="min-h-screen max-h-screen overflow-y-auto custom-scroll text-[#e0e5f9] font-inter"
+      style={{ backgroundColor: theme.background }}
+    >
       <header
         className="sticky top-0 z-40 border-b border-[#424858]/20 px-6 h-16 flex items-center justify-between"
         style={{ backgroundColor: theme.background }}
@@ -413,8 +420,14 @@ const InterviewFeedback = ({ roomName, onBack, onLogout }) => {
             <div className="space-y-6">
               {freshMissing && (
                 <div className="p-4 rounded-xl border border-[#f97316]/30 bg-[#f97316]/10 text-sm text-[#f97316] leading-relaxed">
-                  No report was produced for the session you just finished. It was probably too short to score,
+                  No report was produced for the session you just finished. Scoring needs at least two answers,
                   so your previous feedback is shown below.
+                </div>
+              )}
+              {freshEstimated && (
+                <div className="p-4 rounded-xl border border-[#f97316]/30 bg-[#f97316]/10 text-sm text-[#f97316] leading-relaxed">
+                  Detailed scoring for this session did not finish in time, so the estimated report below is
+                  based on your transcript. Reload in a moment to see if the full report arrived.
                 </div>
               )}
               <FeedbackReport session={selected} />

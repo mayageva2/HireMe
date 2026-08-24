@@ -98,7 +98,7 @@ Output a JSON object with exactly these keys:
 Do not output markdown, backticks, or any text outside the JSON object."""
 
 
-def _fallback_feedback(transcript: list[dict], role: str) -> dict:
+def estimate_feedback(transcript: list[dict], role: str) -> dict:
     """Heuristic report used when OpenAI is unavailable, so the flow never dead-ends."""
     user_turns = [t for t in transcript if t.get("role") == "user" and (t.get("text") or "").strip()]
     answer_count = len(user_turns)
@@ -222,11 +222,11 @@ async def analyze_transcript(transcript: list[dict], *, name: str, role: str) ->
 
     if not api_key:
         logger.warning("OPENAI_API_KEY not set; using heuristic interview feedback")
-        return _fallback_feedback(transcript, role)
+        return estimate_feedback(transcript, role)
 
     transcript_text = _transcript_to_text(transcript)
     if not transcript_text.strip():
-        return _fallback_feedback(transcript, role)
+        return estimate_feedback(transcript, role)
 
     try:
         from openai import AsyncOpenAI
@@ -258,7 +258,7 @@ async def analyze_transcript(transcript: list[dict], *, name: str, role: str) ->
         return feedback
     except Exception as exc:
         logger.error("Interview analysis failed, using fallback: %s", exc)
-        return _fallback_feedback(transcript, role)
+        return estimate_feedback(transcript, role)
 
 
 def build_record(
@@ -308,7 +308,12 @@ def _save_to_file(record: dict) -> None:
             logger.warning("Local interview DB was corrupt; starting a new one")
 
     sessions = db.setdefault(record["userId"], [])
-    sessions.append(record)
+    for index, existing in enumerate(sessions):
+        if existing.get("sortKey") == record["sortKey"]:
+            sessions[index] = record
+            break
+    else:
+        sessions.append(record)
     path.write_text(json.dumps(db, indent=2, ensure_ascii=False), encoding="utf-8")
     logger.info("Interview feedback written to %s", path)
 
@@ -332,7 +337,8 @@ def _save_to_dynamodb(record: dict) -> None:
 
 
 async def save_record(record: dict) -> None:
-    """Persist one session. Never raises: a storage failure must not crash the worker."""
+    """Upsert one session by sortKey, so re-saving replaces the estimate with the graded
+    report. Never raises: a storage failure must not crash the worker."""
     sink = (os.getenv("INTERVIEW_FEEDBACK_SINK") or "dynamodb").strip().lower()
     try:
         if sink == "file":
