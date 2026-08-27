@@ -6,7 +6,6 @@ import { AVATAR_CONTEXT_URL } from '../config';
 import avatarSimulationPic from '../assets/avatarImage.png'; 
 import cvDraftPic from '../assets/fakeCv.png';
 import CVPreviewer from './CVPreviewer';
-import { fetchInterviews } from '../interviewsApi';
 
 /** Maps interview scores (oldest first) onto the 200x100 viewBox of the trend chart. */
 function buildTrendChart(scores) {
