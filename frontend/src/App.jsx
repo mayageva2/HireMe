@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Login, SignUp, getCurrentUser, logout } from './AuthComponents';
+import { Login, SignUp, getCurrentUser, logout, isExplicitTargetRole } from './AuthComponents';
 import Dashboard from './components/Dashboard';
 import InterviewPage from './InterviewPage';
 import HRFlashcards from './components/HRFlashCards';
@@ -63,8 +63,8 @@ function App() {
         }
       }
 
-      // Dashboard "target role" wins over DynamoDB Target Field so users can switch careers.
-      if (profile?.profession) {
+      // Only override DynamoDB when the user saved a real title in the dashboard.
+      if (isExplicitTargetRole(profile?.profession)) {
         context = { ...context, role: profile.profession };
       }
 

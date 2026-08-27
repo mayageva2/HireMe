@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { fetchUserAttributes, fetchAuthSession } from 'aws-amplify/auth';
-import { getCurrentUser, saveTargetRole } from '../AuthComponents';
+import { getCurrentUser, saveTargetRole, isExplicitTargetRole } from '../AuthComponents';
+import { fetchInterviews } from '../interviewsApi';
+import { AVATAR_CONTEXT_URL } from '../config';
 import avatarSimulationPic from '../assets/avatarImage.png'; 
 import cvDraftPic from '../assets/fakeCv.png';
 import CVPreviewer from './CVPreviewer';
@@ -126,7 +128,24 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
         const attributes = await fetchUserAttributes();
         const profile = await getCurrentUser();
         const fullName = profile?.fullName || attributes['name'] || "User";
-        const profession = profile?.profession || attributes['custom:profession'] || "Software Engineer";
+        let profession = profile?.profession || attributes['custom:profession'] || "";
+        if (!isExplicitTargetRole(profession) && profile?.userId) {
+          try {
+            const contextUrl = `${AVATAR_CONTEXT_URL}?userId=${encodeURIComponent(profile.userId)}&sortKey=${encodeURIComponent(profile.sortKey || profile.userId)}`;
+            const contextRes = await fetch(contextUrl);
+            if (contextRes.ok) {
+              const context = await contextRes.json();
+              if (isExplicitTargetRole(context.role)) {
+                profession = context.role;
+              }
+            }
+          } catch (contextErr) {
+            console.warn('Could not load stored target role:', contextErr);
+          }
+        }
+        if (!profession) {
+          profession = "Software Engineer";
+        }
         const nameParts = fullName.split(' ');
         const initials = nameParts.length >= 2 
           ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
@@ -143,6 +162,9 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
           userId: userId
         });
         setRoleDraft(profession);
+        if (profile && onProfileUpdate) {
+          onProfileUpdate({ ...profile, fullName, profession });
+        }
 
         const storedImg = localStorage.getItem(`hireme_profile_image_${userId}`);
         if (storedImg) {

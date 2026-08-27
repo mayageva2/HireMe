@@ -952,6 +952,7 @@ def lambda_handler(event, context):
             existing["User id"] = username
             existing["Sort Key"] = username
             existing["Target Field"] = role
+            existing["TargetField"] = role
             existing["profession"] = role
             table.put_item(Item=existing)
 

@@ -41,7 +41,7 @@ def lambda_handler(event, context):
         }
 
     try:
-        table = boto3.resource("dynamodb").Table(os.environ["DYNAMODB_TABLE"])
+        table = boto3.resource("dynamodb").Table(os.environ.get("DYNAMODB_TABLE", "HireMe_Table"))
         response = table.get_item(
             Key={
                 "User id": user_id,
@@ -61,6 +61,7 @@ def lambda_handler(event, context):
             ),
             "role": _first(
                 item,
+                "TargetField",
                 "Target Field",
                 "targetField",
                 "profession",

@@ -14,6 +14,20 @@ function getDynamoUserKeys(attributes, sub) {
   };
 }
 
+const PLACEHOLDER_ROLES = new Set([
+  '',
+  'professional',
+  'software engineer',
+  'loading...',
+  'guest',
+  'general position',
+  'candidate',
+]);
+
+export function isExplicitTargetRole(role) {
+  return Boolean(role) && !PLACEHOLDER_ROLES.has(String(role).trim().toLowerCase());
+}
+
 export const logout = async () => {
   await signOut();
 };
@@ -73,7 +87,7 @@ export const getCurrentUser = async () => {
       profession:
         localStorage.getItem(`hireme_target_role_${userId}`) ||
         attributes['custom:profession'] ||
-        'Professional',
+        '',
       email: attributes.email,
       userId,
       sortKey,
