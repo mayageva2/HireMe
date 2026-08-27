@@ -11,7 +11,7 @@ from decimal import Decimal
 CORS_HEADERS = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Methods": "GET,POST,PUT,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type,Authorization",
 }
 
@@ -684,6 +684,7 @@ def lambda_handler(event, context):
         is_polish_path = path.endswith("/polish")
         is_import_path = path.endswith("/import")
         is_interviews_path = path.endswith("/interviews")
+        is_target_role_path = path.endswith("/target-role")
         is_tech_questions = "/tech-questions" in path
         is_hr_questions = "/hr-questions" in path
 
@@ -931,6 +932,34 @@ def lambda_handler(event, context):
                     "headers": CORS_HEADERS,
                     "body": json.dumps(questions, cls=DecimalEncoder)
                 }
+
+        if is_target_role_path and method in ("PUT", "POST"):
+            body_str = event.get("body") or ""
+            if event.get("isBase64Encoded"):
+                body_str = base64.b64decode(body_str).decode("utf-8")
+            body_json = json.loads(body_str) if body_str else {}
+            role = str(body_json.get("role") or "").strip()
+            if not role or len(role) > 256:
+                return {
+                    "statusCode": 400,
+                    "headers": CORS_HEADERS,
+                    "body": json.dumps({"error": "role is required"}),
+                }
+
+            existing = table.get_item(
+                Key={"User id": username, "Sort Key": username}
+            ).get("Item") or {}
+            existing["User id"] = username
+            existing["Sort Key"] = username
+            existing["Target Field"] = role
+            existing["profession"] = role
+            table.put_item(Item=existing)
+
+            return {
+                "statusCode": 200,
+                "headers": CORS_HEADERS,
+                "body": json.dumps({"success": True, "role": role}),
+            }
 
         # --- GET /interviews: Interview feedback history written by the agent ---
         if method == "GET" and is_interviews_path:

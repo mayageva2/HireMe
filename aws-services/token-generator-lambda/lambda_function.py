@@ -23,15 +23,26 @@ def _parse_context(event: dict) -> dict:
         except json.JSONDecodeError:
             pass
 
+    job_requirements = (
+        data.get("jobRequirements")
+        or data.get("job_requirements")
+        or query.get("jobRequirements")
+        or ""
+    )
+    if not isinstance(job_requirements, str):
+        job_requirements = str(job_requirements)
+    job_requirements = job_requirements.strip()[:6000]
+
     return {
         "name": data.get("name") or query.get("name") or "Candidate",
         "role": data.get("role") or query.get("role") or "General Position",
         "user_id": data.get("userId") or data.get("user_id") or query.get("userId") or "",
         "sort_key": data.get("sortKey") or data.get("sort_key") or query.get("sortKey") or "",
+        "job_requirements": job_requirements,
     }
 
 
-async def _mint_interview_token(name: str, role: str, user_id: str, sort_key: str) -> dict:
+async def _mint_interview_token(name: str, role: str, user_id: str, sort_key: str, job_requirements: str = "") -> dict:
     livekit_url = os.environ["LIVEKIT_URL"]
     api_key = os.environ["LIVEKIT_API_KEY"]
     api_secret = os.environ["LIVEKIT_API_SECRET"]
@@ -45,6 +56,7 @@ async def _mint_interview_token(name: str, role: str, user_id: str, sort_key: st
             "role": role,
             "user_id": user_id,
             "sort_key": sort_key,
+            "job_requirements": job_requirements,
         }
     )
 
@@ -92,7 +104,11 @@ def lambda_handler(event, context):
         ctx = _parse_context(event)
         result = asyncio.run(
             _mint_interview_token(
-                ctx["name"], ctx["role"], ctx["user_id"], ctx["sort_key"]
+                ctx["name"],
+                ctx["role"],
+                ctx["user_id"],
+                ctx["sort_key"],
+                ctx["job_requirements"],
             )
         )
         return {

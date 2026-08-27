@@ -546,6 +546,7 @@ export function devCvServicePlugin() {
         const isPolish = req.url.startsWith('/api/cv/polish')
         const isImport = req.url.startsWith('/api/cv/import')
         const isInterviews = req.url.startsWith('/api/cv/interviews')
+        const isTargetRole = req.url.startsWith('/api/cv/target-role')
         const isTechQuestions = req.url.includes('/tech-questions')
         const isHrQuestionsProgress = req.url.includes('/hr-questions')
  
@@ -672,6 +673,26 @@ export function devCvServicePlugin() {
               res.end(JSON.stringify(questions))
               return
             }
+          }
+
+          if ((req.method === 'PUT' || req.method === 'POST') && isTargetRole) {
+            const body = await readJsonBody(req)
+            const role = String(body.role || '').trim()
+            if (!role) {
+              res.statusCode = 400
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ error: 'role is required' }))
+              return
+            }
+            const db = loadDatabase()
+            if (!db[username]) {
+              db[username] = { cv: null, analysis: null }
+            }
+            db[username].targetRole = role
+            saveDatabase(db)
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ success: true, role }))
+            return
           }
 
           if (req.method === 'GET' && isInterviews) {

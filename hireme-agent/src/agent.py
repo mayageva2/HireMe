@@ -27,7 +27,12 @@ logger = logging.getLogger("agent")
 load_dotenv(".env")
 os.environ["AWS_REGION"] = os.getenv("AWS_REGION", "us-east-1")
 
-DEFAULT_AVATAR_CONTEXT = {"name": "Candidate", "role": "General Position", "user_id": ""}
+DEFAULT_AVATAR_CONTEXT = {
+    "name": "Candidate",
+    "role": "General Position",
+    "user_id": "",
+    "job_requirements": "",
+}
 
 CARTESIA_VOICE = "f786b574-daa5-4673-aa0c-cbe3e8534c02"
 
@@ -75,9 +80,47 @@ def build_tts():
         api_secret=livekit_secret,
     )
 
+def _job_requirements_from(data: dict) -> str:
+    raw = data.get("job_requirements") or data.get("jobRequirements") or ""
+    if not isinstance(raw, str):
+        raw = str(raw)
+    return raw.strip()[:6000]
+
+
 def build_interview_instructions(context: dict) -> str:
     name = context.get("name", DEFAULT_AVATAR_CONTEXT["name"])
     role = context.get("role", DEFAULT_AVATAR_CONTEXT["role"])
+    job_requirements = (context.get("job_requirements") or "").strip()
+
+    if job_requirements:
+        return f"""You are a professional and friendly HireMe interviewer.
+
+CANDIDATE CONTEXT:
+- Name: {name}
+- Target role: {role}
+
+JOB DESCRIPTION (source of truth for technical questions):
+{job_requirements}
+
+BEHAVIOR & TONE:
+- Be polite, calm, and confident.
+- Ask one question at a time.
+- Allow the candidate time to respond before continuing.
+- If an answer is vague, ask a short follow-up question.
+- Keep responses concise to ensure smooth avatar lip-sync.
+- Never ask more than one question in a single reply.
+- Keep each reply to at most 2-3 short sentences.
+
+TECHNICAL QUESTIONS:
+- Ask at least three technical questions grounded in the job description above.
+- Cover the stack, tools, and responsibilities named in the posting.
+- Do not invent a different tech stack. If the posting is thin, ask about the closest skills it does mention.
+
+INTERVIEW STRUCTURE:
+1. Greet {name} and say you will interview them against this job description for a {role} position.
+2. Ask the job-description technical questions.
+3. Ask at least two HR / behavioral questions.
+4. End by thanking the candidate and inviting them to ask questions."""
 
     return f"""You are a professional and friendly HireMe interviewer.
 
@@ -104,6 +147,11 @@ INTERVIEW STRUCTURE:
 def build_greeting(context: dict) -> str:
     name = context.get("name", DEFAULT_AVATAR_CONTEXT["name"])
     role = context.get("role", DEFAULT_AVATAR_CONTEXT["role"])
+    if (context.get("job_requirements") or "").strip():
+        return (
+            f"Hello {name}, thank you for joining today. "
+            f"I'll ask questions based on the job description you shared for this {role} role."
+        )
     return (
         f"Hello {name}, thank you for joining today. "
         f"I'll be asking you a few questions to better understand your fit for this {role} role."
@@ -120,11 +168,12 @@ async def wait_for_user_context(room: rtc.Room, timeout: float = 30.0) -> dict:
             logger.warning("Invalid participant metadata JSON: %s", metadata)
             return None
 
-        if data.get("name") or data.get("role"):
+        if data.get("name") or data.get("role") or data.get("job_requirements") or data.get("jobRequirements"):
             return {
                 "name": data.get("name", DEFAULT_AVATAR_CONTEXT["name"]),
                 "role": data.get("role", DEFAULT_AVATAR_CONTEXT["role"]),
                 "user_id": data.get("user_id") or "",
+                "job_requirements": _job_requirements_from(data),
             }
         return None
 
@@ -189,11 +238,12 @@ def load_avatar_context(ctx: JobContext) -> dict | None:
         logger.warning("Invalid job metadata JSON: %s", ctx.job.metadata)
         return None
 
-    if data.get("name") or data.get("role"):
+    if data.get("name") or data.get("role") or data.get("job_requirements") or data.get("jobRequirements"):
         return {
             "name": data.get("name", DEFAULT_AVATAR_CONTEXT["name"]),
             "role": data.get("role", DEFAULT_AVATAR_CONTEXT["role"]),
             "user_id": data.get("user_id") or "",
+            "job_requirements": _job_requirements_from(data),
         }
     return None
 
@@ -216,10 +266,13 @@ async def entrypoint(ctx: JobContext):
 
     avatar_context = load_avatar_context(ctx)
     if avatar_context:
-        print(f"--- DEBUG: Interview context from job metadata: {avatar_context} ---")
+        print(f"--- DEBUG: Interview context from job metadata: name={avatar_context.get('name')} role={avatar_context.get('role')} ---")
     else:
         avatar_context = await wait_for_user_context(ctx.room)
-        print(f"--- DEBUG: Interview context from participant metadata: {avatar_context} ---")
+        print(f"--- DEBUG: Interview context from participant metadata: name={avatar_context.get('name')} role={avatar_context.get('role')} ---")
+    print(
+        f"--- DEBUG: Job description chars: {len((avatar_context.get('job_requirements') or '').strip())} ---"
+    )
 
     session = AgentSession(
         stt=build_stt(),

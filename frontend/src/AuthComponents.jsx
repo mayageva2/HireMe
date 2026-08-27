@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signIn, signUp, confirmSignUp, signOut, fetchUserAttributes, fetchAuthSession } from 'aws-amplify/auth';
+import { signIn, signUp, confirmSignUp, signOut, fetchUserAttributes, fetchAuthSession, updateUserAttributes } from 'aws-amplify/auth';
 
 /** DynamoDB HireMe_Table uses the Cognito username for both User id and Sort Key. */
 function getDynamoUserKeys(attributes, sub) {
@@ -18,6 +18,49 @@ export const logout = async () => {
   await signOut();
 };
 
+/** Persist the interview target role. Cognito is primary; DynamoDB keeps the avatar Lambda in sync. */
+export async function saveTargetRole(profession) {
+  const trimmed = (profession || '').trim();
+  if (!trimmed) {
+    throw new Error('Enter a target role');
+  }
+
+  const profile = await getCurrentUser();
+  if (!profile?.userId || profile.userId === 'guest') {
+    throw new Error('Sign in to change your target role');
+  }
+
+  localStorage.setItem(`hireme_target_role_${profile.userId}`, trimmed);
+
+  try {
+    await updateUserAttributes({
+      userAttributes: { 'custom:profession': trimmed },
+    });
+  } catch (err) {
+    console.warn('Could not save role to Cognito (attribute may be missing on this pool):', err);
+  }
+
+  try {
+    const session = await fetchAuthSession();
+    const token = session.tokens?.idToken?.toString();
+    const res = await fetch('/api/cv/target-role', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ role: trimmed }),
+    });
+    if (!res.ok) {
+      console.warn('Could not save role to DynamoDB:', res.status);
+    }
+  } catch (err) {
+    console.warn('Could not save role to DynamoDB:', err);
+  }
+
+  return { ...profile, profession: trimmed };
+}
+
 export const getCurrentUser = async () => {
   try {
     const attributes = await fetchUserAttributes();
@@ -27,7 +70,10 @@ export const getCurrentUser = async () => {
 
     return {
       fullName: attributes.name || 'User',
-      profession: attributes['custom:profession'] || 'Professional',
+      profession:
+        localStorage.getItem(`hireme_target_role_${userId}`) ||
+        attributes['custom:profession'] ||
+        'Professional',
       email: attributes.email,
       userId,
       sortKey,

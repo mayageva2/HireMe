@@ -246,6 +246,7 @@ const InterviewPage = ({ token, avatarContext, onBack, onLogout, onFinish }) => 
       agent_name: 'my-agent',
       name: avatarContext?.name || 'Candidate',
       role: avatarContext?.role || 'General Position',
+      job_requirements: avatarContext?.jobRequirements || '',
     });
 
     if (!token) {
@@ -265,6 +266,7 @@ const InterviewPage = ({ token, avatarContext, onBack, onLogout, onFinish }) => 
             {avatarContext && (
               <p style={{ color: '#a5abbd', marginBottom: '16px' }}>
                 Interview for: <strong style={{ color: '#5bf4de' }}>{avatarContext.role}</strong>
+                {avatarContext.jobRequirements ? ' · based on job description' : ''}
               </p>
             )}
             <button
