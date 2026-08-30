@@ -42,7 +42,9 @@ DEFAULT_AVATAR_CONTEXT = {
     "job_requirements": "",
 }
 
-CARTESIA_VOICE = "f786b574-daa5-4673-aa0c-cbe3e8534c02"
+# Cartesia voice library IDs: Katie (female) for HR, Blake (male) for technical.
+HR_CARTESIA_VOICE = "f786b574-daa5-4673-aa0c-cbe3e8534c02"
+TECHNICAL_CARTESIA_VOICE = "a167e0f3-df7e-4d52-a9c3-f949145efdab"
 TECHNICAL_SIMLI_FACE_ID = "dd10cb5a-d31d-4f12-b69f-6db3383c006e"
 MIN_MAIN_QUESTIONS = 5
 
@@ -69,11 +71,12 @@ def build_stt():
     )
 
 
-def build_tts():
+def build_tts(context: dict | None = None):
+    voice = select_voice(context or {})
     cartesia_key = os.getenv("CARTESIA_API_KEY")
     if cartesia_key:
-        print("--- DEBUG: Using Cartesia TTS (direct API key) ---")
-        return cartesia.TTS(api_key=cartesia_key, voice=CARTESIA_VOICE)
+        print(f"--- DEBUG: Using Cartesia TTS (direct API key), voice={voice} ---")
+        return cartesia.TTS(api_key=cartesia_key, voice=voice)
 
     livekit_key = os.getenv("LIVEKIT_API_KEY")
     livekit_secret = os.getenv("LIVEKIT_API_SECRET")
@@ -82,10 +85,10 @@ def build_tts():
             "Set CARTESIA_API_KEY or LIVEKIT_API_KEY + LIVEKIT_API_SECRET in hireme-agent/.env"
         )
 
-    print("--- DEBUG: Using LiveKit Inference TTS (Cartesia via LiveKit Cloud) ---")
+    print(f"--- DEBUG: Using LiveKit Inference TTS (Cartesia), voice={voice} ---")
     return inference.TTS(
         model="cartesia/sonic-2",
-        voice=CARTESIA_VOICE,
+        voice=voice,
         api_key=livekit_key,
         api_secret=livekit_secret,
     )
@@ -106,6 +109,13 @@ def select_simli_face_id(context: dict) -> str:
     if _interview_type_from(context) == "technical":
         return os.getenv("TECHNICAL_SIMLI_FACE_ID") or TECHNICAL_SIMLI_FACE_ID
     return os.getenv("HR_SIMLI_FACE_ID") or os.getenv("SIMLI_FACE_ID", "")
+
+
+def select_voice(context: dict) -> str:
+    """Match the voice to the avatar: the technical interviewer is male."""
+    if _interview_type_from(context) == "technical":
+        return os.getenv("TECHNICAL_CARTESIA_VOICE") or TECHNICAL_CARTESIA_VOICE
+    return os.getenv("HR_CARTESIA_VOICE") or HR_CARTESIA_VOICE
 
 
 def _scan_hr_questions() -> list[str]:
@@ -370,7 +380,7 @@ async def entrypoint(ctx: JobContext):
             model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
             api_key=openai_api_key,
         ),
-        tts=build_tts(),
+        tts=build_tts(avatar_context),
         turn_detection=MultilingualModel(),
         vad=ctx.proc.userdata["vad"],
         # Simli + open speakers: don't allow echo from the mic to interrupt the avatar.

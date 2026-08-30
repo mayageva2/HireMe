@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { 
   LiveKitRoom, 
   ControlBar, 
@@ -12,7 +12,7 @@ import {
   useTracks,
   useRoomContext,
 } from '@livekit/components-react';
-import { Track } from 'livekit-client';
+import { RoomEvent, Track } from 'livekit-client';
 import '@livekit/components-styles';
 import { LIVEKIT_URL } from './config';
 
@@ -202,6 +202,21 @@ function MicGateWhileAgentSpeaks() {
   return null;
 }
 
+/** Any disconnect ends the session, so hanging up never leaves the user on a dead room. */
+function LeaveOnDisconnect({ onDisconnected }) {
+  const room = useRoomContext();
+
+  useEffect(() => {
+    if (!room) return undefined;
+    room.on(RoomEvent.Disconnected, onDisconnected);
+    return () => {
+      room.off(RoomEvent.Disconnected, onDisconnected);
+    };
+  }, [room, onDisconnected]);
+
+  return null;
+}
+
 /** Leaves the room so the agent's shutdown hook runs and writes the feedback report. */
 function EndInterviewButton({ onEnd }) {
   const room = useRoomContext();
@@ -242,6 +257,13 @@ const InterviewPage = ({ token, avatarContext, onBack, onLogout, onFinish }) => 
     const [isStarted, setIsStarted] = useState(false);
     const [connectionError, setConnectionError] = useState(null);
     const serverUrl = LIVEKIT_URL;
+    // The button and the disconnect event can both fire; only navigate once.
+    const hasFinishedRef = useRef(false);
+    const handleFinish = useCallback(() => {
+      if (hasFinishedRef.current) return;
+      hasFinishedRef.current = true;
+      onFinish?.();
+    }, [onFinish]);
     const roomMetadata = JSON.stringify({
       agent_name: 'my-agent',
       name: avatarContext?.name || 'Candidate',
@@ -349,11 +371,12 @@ const InterviewPage = ({ token, avatarContext, onBack, onLogout, onFinish }) => 
                 }}
             >
                 <MicGateWhileAgentSpeaks />
+                <LeaveOnDisconnect onDisconnected={handleFinish} />
                 <InterviewVideoLayout />
                 <AvatarAudioPlayback />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                  <ControlBar controls={{ screenShare: false }} />
-                  {onFinish && <EndInterviewButton onEnd={onFinish} />}
+                  <ControlBar controls={{ screenShare: false, leave: false }} />
+                  {onFinish && <EndInterviewButton onEnd={handleFinish} />}
                 </div>
                 <LiveTranscription />
         </LiveKitRoom>

@@ -42,6 +42,21 @@ def test_face_selection_is_per_interview(monkeypatch: pytest.MonkeyPatch) -> Non
     assert agent.select_simli_face_id({"interview_type": "technical"}) == "technical-face"
 
 
+def test_voice_matches_interview_type(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("HR_CARTESIA_VOICE", raising=False)
+    monkeypatch.delenv("TECHNICAL_CARTESIA_VOICE", raising=False)
+
+    hr_voice = agent.select_voice({"interview_type": "hr"})
+    technical_voice = agent.select_voice({"interview_type": "technical"})
+
+    assert hr_voice == agent.HR_CARTESIA_VOICE
+    assert technical_voice == agent.TECHNICAL_CARTESIA_VOICE
+    assert hr_voice != technical_voice
+
+    monkeypatch.setenv("TECHNICAL_CARTESIA_VOICE", "override-voice")
+    assert agent.select_voice({"interview_type": "technical"}) == "override-voice"
+
+
 @pytest.mark.asyncio
 async def test_hr_pool_requires_five_questions(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(agent, "_scan_hr_questions", lambda: ["One?", "Two?"])
