@@ -375,7 +375,7 @@ const InterviewPage = ({ token, avatarContext, onBack, onLogout, onFinish }) => 
                 <InterviewVideoLayout />
                 <AvatarAudioPlayback />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                  <ControlBar controls={{ screenShare: false, leave: false }} />
+                  <ControlBar controls={{ screenShare: false }} />
                   {onFinish && <EndInterviewButton onEnd={handleFinish} />}
                 </div>
                 <LiveTranscription />
