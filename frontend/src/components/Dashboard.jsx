@@ -242,13 +242,18 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
   const interviewStats = useMemo(() => {
     if (!interviews.length) return null;
 
-    const scores = interviews.map((session) => Number(session.feedback?.overallScore) || 0);
-    const average = scores.reduce((sum, score) => sum + score, 0) / scores.length;
     const latest = interviews[0];
+    const latestType = latest.interviewType || 'legacy';
+    const comparableInterviews = interviews.filter(
+      (session) => (session.interviewType || 'legacy') === latestType,
+    );
+    const scores = comparableInterviews.map((session) => Number(session.feedback?.overallScore) || 0);
+    const average = scores.reduce((sum, score) => sum + score, 0) / scores.length;
     const categories = Array.isArray(latest.feedback?.categories) ? latest.feedback.categories : [];
 
     return {
-      count: interviews.length,
+      count: comparableInterviews.length,
+      latestType,
       averageScore: (Math.round(average * 10) / 10).toFixed(1),
       latestScore: (Number(latest.feedback?.overallScore) || 0).toFixed(1),
       skills: categories.map((category) => ({

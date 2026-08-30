@@ -1,0 +1,52 @@
+[
+  {
+    "id": "hr-001",
+    "category": "motivation",
+    "question": "Tell me about yourself and what attracted you to this role."
+  },
+  {
+    "id": "hr-002",
+    "category": "teamwork",
+    "question": "Tell me about a time you worked with a difficult teammate. How did you handle it?"
+  },
+  {
+    "id": "hr-003",
+    "category": "conflict",
+    "question": "Describe a workplace conflict you faced and how you resolved it."
+  },
+  {
+    "id": "hr-004",
+    "category": "ownership",
+    "question": "Tell me about a mistake you made at work and what you learned from it."
+  },
+  {
+    "id": "hr-005",
+    "category": "priorities",
+    "question": "Give an example of how you handled competing deadlines."
+  },
+  {
+    "id": "hr-006",
+    "category": "adaptability",
+    "question": "Describe a time you had to adapt quickly to a major change."
+  },
+  {
+    "id": "hr-007",
+    "category": "leadership",
+    "question": "Tell me about a time you took the lead without being asked."
+  },
+  {
+    "id": "hr-008",
+    "category": "feedback",
+    "question": "What is a difficult piece of feedback you received, and how did you respond?"
+  },
+  {
+    "id": "hr-009",
+    "category": "achievement",
+    "question": "What professional achievement are you most proud of, and why?"
+  },
+  {
+    "id": "hr-010",
+    "category": "growth",
+    "question": "Which skill are you currently working to improve, and what are you doing about it?"
+  }
+]

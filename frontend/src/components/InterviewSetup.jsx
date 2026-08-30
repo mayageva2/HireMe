@@ -3,17 +3,20 @@ import React, { useState } from 'react';
 const MAX_JD_CHARS = 6000;
 
 const InterviewSetup = ({ defaultRole, isStarting, onBack, onStart }) => {
-  const [mode, setMode] = useState('generic');
+  const [interviewType, setInterviewType] = useState('hr');
+  const [technicalSource, setTechnicalSource] = useState('auto');
   const [jobDescription, setJobDescription] = useState('');
 
   const trimmed = jobDescription.trim();
   const jdTooLong = trimmed.length > MAX_JD_CHARS;
-  const canStart = !isStarting && (mode === 'generic' || (trimmed.length > 20 && !jdTooLong));
+  const needsJobDescription = interviewType === 'technical' && technicalSource === 'job';
+  const canStart = !isStarting && (!needsJobDescription || (trimmed.length > 20 && !jdTooLong));
 
   const handleStart = () => {
     if (!canStart) return;
     onStart({
-      jobDescription: mode === 'job' ? trimmed.slice(0, MAX_JD_CHARS) : '',
+      interviewType,
+      jobDescription: needsJobDescription ? trimmed.slice(0, MAX_JD_CHARS) : '',
     });
   };
 
@@ -31,44 +34,73 @@ const InterviewSetup = ({ defaultRole, isStarting, onBack, onStart }) => {
 
         <h1 className="text-2xl font-black mb-2">Start interview</h1>
         <p className="text-sm text-[#a5abbd] mb-8">
-          Generic uses your target role ({defaultRole || 'your profession'}). Job description
-          mode asks technical questions from the posting you paste.
+          Choose a focused HR or technical interview. Each session asks at least five questions
+          and provides a score when you finish.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
           <button
             type="button"
-            onClick={() => setMode('generic')}
+            onClick={() => setInterviewType('hr')}
             className={`text-left p-4 rounded-xl border transition-all ${
-              mode === 'generic'
+              interviewType === 'hr'
                 ? 'border-[#5bf4de]/60 bg-[#5bf4de]/10'
                 : 'border-[#424858]/30 bg-[#12192a] hover:border-[#5bf4de]/30'
             }`}
           >
-            <p className="text-xs font-black uppercase tracking-widest text-[#5bf4de] mb-1">Generic</p>
+            <p className="text-xs font-black uppercase tracking-widest text-[#5bf4de] mb-1">HR interview</p>
             <p className="text-sm text-[#a5abbd] leading-relaxed">
-              Standard interview for your saved target role.
+              Behavioral questions selected from the HR question pool.
             </p>
           </button>
           <button
             type="button"
-            onClick={() => setMode('job')}
+            onClick={() => setInterviewType('technical')}
             className={`text-left p-4 rounded-xl border transition-all ${
-              mode === 'job'
+              interviewType === 'technical'
                 ? 'border-[#5bf4de]/60 bg-[#5bf4de]/10'
                 : 'border-[#424858]/30 bg-[#12192a] hover:border-[#5bf4de]/30'
             }`}
           >
             <p className="text-xs font-black uppercase tracking-widest text-[#5bf4de] mb-1">
-              Job description
+              Technical interview
             </p>
             <p className="text-sm text-[#a5abbd] leading-relaxed">
-              Paste a posting. Technical questions follow that JD.
+              Questions generated for {defaultRole || 'your saved target role'}.
             </p>
           </button>
         </div>
 
-        {mode === 'job' && (
+        {interviewType === 'technical' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            <button
+              type="button"
+              onClick={() => setTechnicalSource('auto')}
+              className={`text-left p-4 rounded-xl border transition-all ${
+                technicalSource === 'auto'
+                  ? 'border-[#5bf4de]/60 bg-[#5bf4de]/10'
+                  : 'border-[#424858]/30 bg-[#12192a] hover:border-[#5bf4de]/30'
+              }`}
+            >
+              <p className="text-xs font-black uppercase tracking-widest mb-1">Auto generate</p>
+              <p className="text-sm text-[#a5abbd]">Use your saved target role.</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTechnicalSource('job')}
+              className={`text-left p-4 rounded-xl border transition-all ${
+                technicalSource === 'job'
+                  ? 'border-[#5bf4de]/60 bg-[#5bf4de]/10'
+                  : 'border-[#424858]/30 bg-[#12192a] hover:border-[#5bf4de]/30'
+              }`}
+            >
+              <p className="text-xs font-black uppercase tracking-widest mb-1">Job description</p>
+              <p className="text-sm text-[#a5abbd]">Tailor questions to a specific posting.</p>
+            </button>
+          </div>
+        )}
+
+        {needsJobDescription && (
           <div className="mb-6">
             <label className="block text-[10px] font-black uppercase tracking-widest text-[#a5abbd] mb-2">
               Paste job requirements

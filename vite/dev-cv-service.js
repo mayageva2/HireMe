@@ -495,6 +495,7 @@ function loadInterviews(username, includeTranscript) {
       id: session.sortKey,
       room: session.room,
       role: session.role,
+      interviewType: session.interviewType || 'legacy',
       candidateName: session.candidateName,
       startedAt: session.startedAt,
       endedAt: session.endedAt,

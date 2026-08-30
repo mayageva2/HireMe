@@ -82,6 +82,7 @@ module "lambdas" {
         LIVEKIT_URL        = var.livekit_url
         LIVEKIT_API_KEY    = var.livekit_api_key
         LIVEKIT_API_SECRET = var.livekit_api_secret
+        HR_QUESTIONS_TABLE = module.storage.hr_questions_table_name
       }
     }
 
@@ -106,6 +107,27 @@ module "api_gateway" {
   cognito_client_id     = module.cognito.user_pool_client_id
   allowed_origins       = var.allowed_origins
   tags                  = local.common_tags
+}
+
+module "agent" {
+  count  = var.enable_agent ? 1 : 0
+  source = "./modules/agent"
+
+  name_prefix             = local.name_prefix
+  aws_region              = var.aws_region
+  image_tag               = var.agent_image_tag
+  desired_count           = var.agent_desired_count
+  main_table_arn          = module.storage.dynamodb_table_arn
+  main_table_name         = module.storage.dynamodb_table_name
+  hr_questions_table_arn  = module.storage.hr_questions_table_arn
+  hr_questions_table_name = module.storage.hr_questions_table_name
+  openai_model            = var.openai_model
+  hr_simli_face_id        = var.hr_simli_face_id
+  technical_simli_face_id = var.technical_simli_face_id
+  create_network          = var.agent_create_network
+  existing_vpc_id         = var.agent_existing_vpc_id
+  existing_subnet_ids     = var.agent_existing_subnet_ids
+  tags                    = local.common_tags
 }
 
 module "cdn" {

@@ -13,6 +13,21 @@ CORS_HEADERS = {
 }
 
 
+def _validate_hr_pool() -> None:
+    table_name = (os.environ.get("HR_QUESTIONS_TABLE") or "").strip()
+    if not table_name:
+        raise RuntimeError("HR interviews are not configured: HR_QUESTIONS_TABLE is missing")
+
+    import boto3
+
+    response = boto3.resource("dynamodb").Table(table_name).scan(
+        Select="COUNT",
+        Limit=5,
+    )
+    if response.get("Count", 0) < 5:
+        raise RuntimeError("HR interviews need at least five questions in the HR pool")
+
+
 def _parse_context(event: dict) -> dict:
     query = event.get("queryStringParameters") or {}
     body = event.get("body") or ""
@@ -32,17 +47,29 @@ def _parse_context(event: dict) -> dict:
     if not isinstance(job_requirements, str):
         job_requirements = str(job_requirements)
     job_requirements = job_requirements.strip()[:6000]
+    interview_type = data.get("interviewType") or data.get("interview_type") or "hr"
+    interview_type = "technical" if str(interview_type).lower() == "technical" else "hr"
+    if interview_type == "hr":
+        job_requirements = ""
 
     return {
         "name": data.get("name") or query.get("name") or "Candidate",
         "role": data.get("role") or query.get("role") or "General Position",
         "user_id": data.get("userId") or data.get("user_id") or query.get("userId") or "",
         "sort_key": data.get("sortKey") or data.get("sort_key") or query.get("sortKey") or "",
+        "interview_type": interview_type,
         "job_requirements": job_requirements,
     }
 
 
-async def _mint_interview_token(name: str, role: str, user_id: str, sort_key: str, job_requirements: str = "") -> dict:
+async def _mint_interview_token(
+    name: str,
+    role: str,
+    user_id: str,
+    sort_key: str,
+    interview_type: str = "hr",
+    job_requirements: str = "",
+) -> dict:
     livekit_url = os.environ["LIVEKIT_URL"]
     api_key = os.environ["LIVEKIT_API_KEY"]
     api_secret = os.environ["LIVEKIT_API_SECRET"]
@@ -56,6 +83,7 @@ async def _mint_interview_token(name: str, role: str, user_id: str, sort_key: st
             "role": role,
             "user_id": user_id,
             "sort_key": sort_key,
+            "interview_type": interview_type,
             "job_requirements": job_requirements,
         }
     )
@@ -102,12 +130,15 @@ def lambda_handler(event, context):
 
     try:
         ctx = _parse_context(event)
+        if ctx["interview_type"] == "hr":
+            _validate_hr_pool()
         result = asyncio.run(
             _mint_interview_token(
                 ctx["name"],
                 ctx["role"],
                 ctx["user_id"],
                 ctx["sort_key"],
+                ctx["interview_type"],
                 ctx["job_requirements"],
             )
         )

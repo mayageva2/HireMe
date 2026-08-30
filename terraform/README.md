@@ -12,6 +12,8 @@ project document:
   `/api/livekit-token`, and `/api/hr-flashcards`.
 - `modules/amplify`: Amplify app that hosts the React SPA and rewrites `/api/*`
   to API Gateway, matching the current lab.
+- `modules/agent`: optional ECR repository and ECS Fargate service for the
+  LiveKit/Simli interview worker.
 
 Each module has `main.tf`, `variables.tf`, and `outputs.tf`. The root module
 uses the same split (`main.tf`, `variables.tf`, `outputs.tf`, `providers.tf`).
@@ -22,8 +24,9 @@ transcription jobs. The current application agent uses LiveKit/Deepgram for
 speech-to-text; add `transcribe:StartTranscriptionJob` and S3 access to a custom
 Lambda role when the backend starts calling Amazon Transcribe.
 
-Simli, LiveKit, and OpenAI are external services. Terraform only passes their
-configuration to the existing application code.
+Simli, LiveKit, OpenAI, Deepgram, and Cartesia are external services. Terraform
+creates a Secrets Manager container for their agent credentials; you populate
+the values after the bootstrap apply.
 
 ## 1. Configure temporary AWS Academy credentials
 
@@ -97,6 +100,78 @@ push `may-dev`. Amplify injects the new Cognito IDs at build time and proxies
 ```bash
 terraform output -raw application_url
 ```
+
+## Deploy the dual-avatar ECS agent
+
+The worker supports both interviewers in one ECS service. LiveKit job metadata
+selects HR or technical behavior and the matching Simli face for each room.
+Fargate runs continuously and incurs cost while `agent_desired_count` is above
+zero.
+
+1. Set these values in `terraform.tfvars`:
+
+```hcl
+enable_agent            = true
+agent_desired_count     = 0
+hr_simli_face_id        = "your-current-hr-face-id"
+technical_simli_face_id = "dd10cb5a-d31d-4f12-b69f-6db3383c006e"
+```
+
+2. Bootstrap the repository, cluster, network, roles, and empty secret:
+
+```bash
+terraform apply
+```
+
+3. Put credentials into Secrets Manager without committing them:
+
+```bash
+cat > /tmp/hireme-agent-secret.json <<'JSON'
+{
+  "LIVEKIT_URL": "wss://your-project.livekit.cloud",
+  "LIVEKIT_API_KEY": "replace-me",
+  "LIVEKIT_API_SECRET": "replace-me",
+  "OPENAI_API_KEY": "replace-me",
+  "SIMLI_API_KEY": "replace-me",
+  "DEEPGRAM_API_KEY": "replace-me",
+  "CARTESIA_API_KEY": "replace-me"
+}
+JSON
+aws secretsmanager put-secret-value \
+  --secret-id "$(terraform output -raw agent_secret_name)" \
+  --secret-string file:///tmp/hireme-agent-secret.json
+rm /tmp/hireme-agent-secret.json
+```
+
+4. Build and push the agent image:
+
+```bash
+REPOSITORY="$(terraform output -raw agent_ecr_repository_url)"
+REGISTRY="${REPOSITORY%/*}"
+aws ecr get-login-password --region "$(terraform output -json frontend_build_environment | jq -r .VITE_AWS_REGION)" |
+  docker login --username AWS --password-stdin "$REGISTRY"
+docker build --platform linux/amd64 -t "$REPOSITORY:latest" ../hireme-agent
+docker push "$REPOSITORY:latest"
+```
+
+5. Seed the HR pool, then start the service:
+
+```bash
+python3 -m pip install boto3
+python3 scripts/seed_hr_questions.py \
+  --table "$(terraform output -raw hr_questions_table_name)" \
+  --region "$(terraform output -json frontend_build_environment | jq -r .VITE_AWS_REGION)"
+# Change agent_desired_count to 1 in terraform.tfvars
+terraform apply
+aws ecs describe-services \
+  --cluster "$(terraform output -raw agent_ecs_cluster_name)" \
+  --services "$(terraform output -raw agent_ecs_service_name)"
+```
+
+For an existing VPC set `agent_create_network = false`, then provide
+`agent_existing_vpc_id` and at least two outbound-capable subnet IDs. AWS
+Academy may block creation of the ECS IAM roles or network; keep
+`enable_agent = false` there unless the lab grants those permissions.
 
 ## Useful checks
 

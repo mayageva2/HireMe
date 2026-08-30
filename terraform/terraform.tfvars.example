@@ -13,6 +13,19 @@ create_lambda_role = true
 enable_amplify     = true
 enable_cloudfront  = false
 
+# Agent bootstrap: apply with count 0, populate its Secrets Manager JSON,
+# push the Docker image, then change desired_count to 1 and apply again.
+enable_agent            = true
+agent_desired_count     = 0
+agent_image_tag         = "latest"
+hr_simli_face_id        = "replace-with-current-hr-face-id"
+technical_simli_face_id = "dd10cb5a-d31d-4f12-b69f-6db3383c006e"
+
+# Leave true in a normal account. Set false to reuse an existing VPC/subnets.
+agent_create_network      = true
+agent_existing_vpc_id     = null
+agent_existing_subnet_ids = []
+
 # Set connect_github = true with a token to let Terraform attach the repo and
 # create the branch. Otherwise connect the repo in the Amplify console.
 connect_github      = false

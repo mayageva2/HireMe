@@ -14,16 +14,24 @@ from pathlib import Path
 
 logger = logging.getLogger("agent.feedback")
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
-# Fixed set so the Dashboard skill bars have a stable shape across sessions.
-CATEGORIES = [
-    "Communication",
-    "Technical Depth",
-    "Structure (STAR)",
-    "Confidence",
-    "Role Relevance",
-]
+CATEGORIES_BY_TYPE = {
+    "hr": [
+        "Communication",
+        "Structure (STAR)",
+        "Confidence",
+        "Behavioral Relevance",
+        "Self Awareness",
+    ],
+    "technical": [
+        "Technical Correctness",
+        "Technical Depth",
+        "Problem Solving",
+        "Communication",
+        "Role Relevance",
+    ],
+}
 
 # DynamoDB items are capped at 400 KB, and long transcripts blow up prompt cost.
 MAX_STORED_TURNS = 80
@@ -68,13 +76,30 @@ def _transcript_to_text(transcript: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def _build_system_prompt(role: str) -> str:
-    category_list = ", ".join(f'"{c}"' for c in CATEGORIES)
-    return f"""You are an experienced interview coach reviewing a mock job interview for a {role} position.
+def normalize_interview_type(value: str | None) -> str:
+    return "technical" if str(value or "").strip().lower() == "technical" else "hr"
+
+
+def categories_for(interview_type: str) -> list[str]:
+    return CATEGORIES_BY_TYPE[normalize_interview_type(interview_type)]
+
+
+def _build_system_prompt(role: str, interview_type: str, job_requirements: str = "") -> str:
+    normalized_type = normalize_interview_type(interview_type)
+    categories = categories_for(normalized_type)
+    category_list = ", ".join(f'"{c}"' for c in categories)
+    rubric = (
+        "Focus on technical accuracy, depth, problem-solving logic, trade-offs, and relevance to the role"
+        + (" and supplied job description." if job_requirements else ".")
+        if normalized_type == "technical"
+        else "Focus on communication, STAR structure, confidence, behavioral relevance, and honest self-awareness."
+    )
+    return f"""You are an experienced interview coach reviewing a {normalized_type} mock interview for a {role} position.
 
 You are given the full transcript. The "Interviewer" lines are an AI interviewer; the "Candidate" lines are the person you are coaching. Judge only the candidate.
 
 Be specific and honest but encouraging. Quote or paraphrase what the candidate actually said instead of giving generic advice. If the interview was very short or the candidate barely answered, say so and score accordingly.
+{rubric}
 
 Output a JSON object with exactly these keys:
 1. "overallScore": a number from 0 to 10 (one decimal allowed) for overall interview performance.
@@ -98,7 +123,7 @@ Output a JSON object with exactly these keys:
 Do not output markdown, backticks, or any text outside the JSON object."""
 
 
-def estimate_feedback(transcript: list[dict], role: str) -> dict:
+def estimate_feedback(transcript: list[dict], role: str, interview_type: str = "hr") -> dict:
     """Heuristic report used when OpenAI is unavailable, so the flow never dead-ends."""
     user_turns = [t for t in transcript if t.get("role") == "user" and (t.get("text") or "").strip()]
     answer_count = len(user_turns)
@@ -118,6 +143,7 @@ def estimate_feedback(transcript: list[dict], role: str) -> dict:
     if avg_words >= 30:
         strengths.append("Your answers had enough detail to follow your reasoning.")
 
+    normalized_type = normalize_interview_type(interview_type)
     improvements = [
         {
             "issue": "Automatic analysis was unavailable, so this report is based on answer length only.",
@@ -126,10 +152,11 @@ def estimate_feedback(transcript: list[dict], role: str) -> dict:
         }
     ]
     if avg_words < 25:
+        structure_name = "STAR structure" if normalized_type == "hr" else "clear assumptions, reasoning, and trade-offs"
         improvements.append(
             {
                 "issue": "Answers were short on average.",
-                "fix": "Use the STAR structure to give context, action, and result for each answer.",
+                "fix": f"Use {structure_name} to make each answer complete.",
                 "example": "In my last project, the build took 20 minutes, so I parallelised the test suite and cut it to 6.",
             }
         )
@@ -137,10 +164,13 @@ def estimate_feedback(transcript: list[dict], role: str) -> dict:
     return {
         "overallScore": score,
         "summary": (
-            f"You answered {answer_count} question(s) for the {role} role, averaging about "
+            f"You answered {answer_count} {normalized_type} question(s) for the {role} role, averaging about "
             f"{avg_words} words per answer. Detailed AI analysis was not available for this session."
         ),
-        "categories": [{"name": name, "score": int(round(score)), "note": "Estimated without AI analysis."} for name in CATEGORIES],
+        "categories": [
+            {"name": name, "score": round(score), "note": "Estimated without AI analysis."}
+            for name in categories_for(normalized_type)
+        ],
         "strengths": strengths,
         "improvements": improvements,
         "questionFeedback": [],
@@ -150,7 +180,7 @@ def estimate_feedback(transcript: list[dict], role: str) -> dict:
     }
 
 
-def _normalize_feedback(parsed: dict, role: str) -> dict:
+def _normalize_feedback(parsed: dict, role: str, interview_type: str) -> dict:
     def clamp(value, low, high, default):
         try:
             number = float(value)
@@ -164,7 +194,7 @@ def _normalize_feedback(parsed: dict, role: str) -> dict:
             by_name[str(entry["name"]).strip().lower()] = entry
 
     categories = []
-    for name in CATEGORIES:
+    for name in categories_for(interview_type):
         entry = by_name.get(name.lower(), {})
         categories.append(
             {
@@ -215,18 +245,25 @@ def _normalize_feedback(parsed: dict, role: str) -> dict:
     }
 
 
-async def analyze_transcript(transcript: list[dict], *, name: str, role: str) -> dict:
+async def analyze_transcript(
+    transcript: list[dict],
+    *,
+    name: str,
+    role: str,
+    interview_type: str = "hr",
+    job_requirements: str = "",
+) -> dict:
     """Ask OpenAI to grade the interview. Never raises: falls back to a heuristic report."""
     api_key = (os.getenv("OPENAI_API_KEY") or "").strip()
     model = os.getenv("OPENAI_FEEDBACK_MODEL") or os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 
     if not api_key:
         logger.warning("OPENAI_API_KEY not set; using heuristic interview feedback")
-        return estimate_feedback(transcript, role)
+        return estimate_feedback(transcript, role, interview_type)
 
     transcript_text = _transcript_to_text(transcript)
     if not transcript_text.strip():
-        return estimate_feedback(transcript, role)
+        return estimate_feedback(transcript, role, interview_type)
 
     try:
         from openai import AsyncOpenAI
@@ -236,7 +273,10 @@ async def analyze_transcript(transcript: list[dict], *, name: str, role: str) ->
             client.chat.completions.create(
                 model=model,
                 messages=[
-                    {"role": "system", "content": _build_system_prompt(role)},
+                    {
+                        "role": "system",
+                        "content": _build_system_prompt(role, interview_type, job_requirements),
+                    },
                     {
                         "role": "user",
                         "content": f"Candidate name: {name}\nTarget role: {role}\n\nTranscript:\n{transcript_text}",
@@ -252,13 +292,13 @@ async def analyze_transcript(transcript: list[dict], *, name: str, role: str) ->
         if not content:
             raise ValueError("OpenAI returned an empty response")
 
-        feedback = _normalize_feedback(json.loads(content), role)
+        feedback = _normalize_feedback(json.loads(content), role, interview_type)
         feedback["model"] = model
         logger.info("Interview feedback generated (score %s)", feedback["overallScore"])
         return feedback
     except Exception as exc:
         logger.error("Interview analysis failed, using fallback: %s", exc)
-        return estimate_feedback(transcript, role)
+        return estimate_feedback(transcript, role, interview_type)
 
 
 def build_record(
@@ -267,6 +307,7 @@ def build_record(
     room: str,
     name: str,
     role: str,
+    interview_type: str,
     transcript: list[dict],
     feedback: dict,
     started_at: str,
@@ -288,6 +329,7 @@ def build_record(
         "room": room,
         "candidateName": name,
         "role": role,
+        "interviewType": normalize_interview_type(interview_type),
         "startedAt": started_at,
         "endedAt": ended_at,
         "durationSeconds": duration,

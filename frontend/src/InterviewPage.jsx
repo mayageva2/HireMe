@@ -246,6 +246,7 @@ const InterviewPage = ({ token, avatarContext, onBack, onLogout, onFinish }) => 
       agent_name: 'my-agent',
       name: avatarContext?.name || 'Candidate',
       role: avatarContext?.role || 'General Position',
+      interview_type: avatarContext?.interviewType === 'technical' ? 'technical' : 'hr',
       job_requirements: avatarContext?.jobRequirements || '',
     });
 
@@ -265,7 +266,10 @@ const InterviewPage = ({ token, avatarContext, onBack, onLogout, onFinish }) => 
             <h2>Ready to start?</h2>
             {avatarContext && (
               <p style={{ color: '#a5abbd', marginBottom: '16px' }}>
-                Interview for: <strong style={{ color: '#5bf4de' }}>{avatarContext.role}</strong>
+                <strong style={{ color: '#5bf4de' }}>
+                  {avatarContext.interviewType === 'technical' ? 'Technical' : 'HR'} interview
+                </strong>
+                {' for '}{avatarContext.role}
                 {avatarContext.jobRequirements ? ' · based on job description' : ''}
               </p>
             )}

@@ -6,6 +6,7 @@ import HRFlashcards from './components/HRFlashCards';
 import TechFlashcards from './components/TechFlashCards';
 import CVBuilder from './components/CVBuilder';
 import InterviewSetup from './components/InterviewSetup';
+import InterviewFeedback from './components/InterviewFeedback';
 import { AVATAR_CONTEXT_URL, LIVEKIT_TOKEN_URL } from './config';
 
 function App() {
@@ -38,7 +39,7 @@ function App() {
     checkUser();
   }, []);
 
-  const handleStartInterview = async ({ jobDescription } = {}) => {
+  const handleStartInterview = async ({ interviewType = 'hr', jobDescription } = {}) => {
     setIsStartingInterview(true);
     try {
       const profile = (await getCurrentUser()) || userProfile;
@@ -68,10 +69,15 @@ function App() {
         context = { ...context, role: profile.profession };
       }
 
-      const jobRequirements = (jobDescription || '').trim().slice(0, 6000);
+      const normalizedInterviewType = interviewType === 'technical' ? 'technical' : 'hr';
+      const jobRequirements =
+        normalizedInterviewType === 'technical'
+          ? (jobDescription || '').trim().slice(0, 6000)
+          : '';
       if (jobRequirements) {
         context = { ...context, jobRequirements };
       }
+      context = { ...context, interviewType: normalizedInterviewType };
 
       const tokenRes = await fetch(LIVEKIT_TOKEN_URL, {
         method: 'POST',
@@ -80,11 +86,15 @@ function App() {
           ...context,
           userId: profile?.userId,
           sortKey: profile?.sortKey,
+          interviewType: normalizedInterviewType,
           jobRequirements,
         }),
       });
       if (!tokenRes.ok) {
-        throw new Error(`LiveKit token request failed (${tokenRes.status})`);
+        const errorBody = await tokenRes.json().catch(() => ({}));
+        throw new Error(
+          errorBody.error || `LiveKit token request failed (${tokenRes.status})`,
+        );
       }
 
       const data = await tokenRes.json();

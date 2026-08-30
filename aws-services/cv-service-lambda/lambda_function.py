@@ -979,6 +979,7 @@ def lambda_handler(event, context):
                     "id": item.get("Sort Key"),
                     "room": item.get("room"),
                     "role": item.get("role"),
+                    "interviewType": item.get("interviewType") or "legacy",
                     "candidateName": item.get("candidateName"),
                     "startedAt": item.get("startedAt"),
                     "endedAt": item.get("endedAt"),
