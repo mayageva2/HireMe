@@ -32,6 +32,14 @@ export const logout = async () => {
   await signOut();
 };
 
+async function clearLocalAuthSession() {
+  try {
+    await signOut();
+  } catch {
+    // No local session, or Cognito already dropped it.
+  }
+}
+
 /** Persist the interview target role. Cognito is primary; DynamoDB keeps the avatar Lambda in sync. */
 export async function saveTargetRole(profession) {
   const trimmed = (profession || '').trim();
@@ -115,6 +123,7 @@ export const Login = ({ onSwitch, onSuccess }) => {
     }
 
     try {
+      await clearLocalAuthSession();
       await signIn({
         username: usernameToQuery,
         password: password.trim(),
@@ -176,6 +185,8 @@ export const Login = ({ onSwitch, onSuccess }) => {
 
 export const SignUp = ({ onSwitch }) => {
   const [step, setStep] = useState('form');
+  const [fullName, setFullName] = useState('');
+  const [targetRole, setTargetRole] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
@@ -185,18 +196,25 @@ export const SignUp = ({ onSwitch }) => {
     e.preventDefault();
     setLoading(true);
     try {
+      await clearLocalAuthSession();
       const username = email.split('@')[0].trim();
+      const name = fullName.trim() || username;
+      const profession = targetRole.trim();
       await signUp({
         username,
         password,
         options: {
           userAttributes: {
             email,
-            name: username,
-            given_name: username,
+            name,
+            given_name: name,
+            ...(profession ? { 'custom:profession': profession } : {}),
           },
         },
       });
+      if (profession) {
+        localStorage.setItem(`hireme_target_role_${username}`, profession);
+      }
       setStep('confirm');
     } catch (err) {
       alert('שגיאה בהרשמה: ' + err.message);
@@ -246,7 +264,29 @@ export const SignUp = ({ onSwitch }) => {
       <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem' }}>Join HireMe</h1>
       <p style={{ color: '#a5abbd', marginBottom: '2rem' }}>Start your AI interview journey today.</p>
       <div className="auth-field-group">
-        <label className="auth-label">Institutional Email</label>
+        <label className="auth-label">Full name</label>
+        <input
+          className="auth-input"
+          type="text"
+          placeholder="Maya Cohen"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          required
+        />
+      </div>
+      <div className="auth-field-group">
+        <label className="auth-label">Target job title</label>
+        <input
+          className="auth-input"
+          type="text"
+          placeholder="Junior DevOps Engineer"
+          value={targetRole}
+          onChange={(e) => setTargetRole(e.target.value)}
+          required
+        />
+      </div>
+      <div className="auth-field-group">
+        <label className="auth-label">Email</label>
         <input
           className="auth-input"
           type="email"
