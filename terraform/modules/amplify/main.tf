@@ -54,11 +54,12 @@ locals {
 resource "aws_amplify_app" "this" {
   name                     = var.name_prefix
   platform                 = "WEB"
-  enable_branch_auto_build = var.connect_repository
+  enable_branch_auto_build = var.connect_repository || var.github_repository != ""
   build_spec               = local.build_spec
   environment_variables    = var.environment_variables
-  repository               = var.connect_repository ? var.github_repository : null
-  access_token             = var.connect_repository ? var.github_access_token : null
+  repository               = var.github_repository != "" ? var.github_repository : null
+  access_token             = var.github_access_token != "" ? var.github_access_token : null
+  iam_service_role_arn     = var.iam_service_role_arn != "" ? var.iam_service_role_arn : null
   tags                     = var.tags
 
   custom_rule {
@@ -113,6 +114,15 @@ resource "aws_amplify_app" "this" {
     source = "/<*>"
     target = "/index.html"
     status = "404-200"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      iam_service_role_arn,
+      repository,
+      access_token,
+      enable_branch_auto_build,
+    ]
   }
 }
 

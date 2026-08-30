@@ -197,6 +197,7 @@ resource "aws_ecs_task_definition" "agent" {
       { name = "HR_QUESTIONS_TABLE", value = var.hr_questions_table_name },
       { name = "INTERVIEW_FEEDBACK_SINK", value = "dynamodb" },
       { name = "OPENAI_MODEL", value = var.openai_model },
+      { name = "SIMLI_FACE_ID", value = var.hr_simli_face_id },
       { name = "HR_SIMLI_FACE_ID", value = var.hr_simli_face_id },
       { name = "TECHNICAL_SIMLI_FACE_ID", value = var.technical_simli_face_id },
     ]
@@ -220,6 +221,10 @@ resource "aws_ecs_task_definition" "agent" {
     precondition {
       condition     = length(trimspace(var.hr_simli_face_id)) > 0
       error_message = "hr_simli_face_id must be set when the ECS agent is enabled."
+    }
+    precondition {
+      condition     = length(trimspace(var.technical_simli_face_id)) > 0
+      error_message = "technical_simli_face_id must be set when the ECS agent is enabled."
     }
   }
 

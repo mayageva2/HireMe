@@ -56,13 +56,13 @@ variable "agent_image_tag" {
 }
 
 variable "hr_simli_face_id" {
-  description = "Existing Simli face ID used for HR interviews."
+  description = "Simli face ID for HR interviews. Copied onto the ECS agent as HR_SIMLI_FACE_ID and SIMLI_FACE_ID."
   type        = string
   default     = ""
 }
 
 variable "technical_simli_face_id" {
-  description = "Simli face ID used for technical interviews."
+  description = "Simli face ID for technical interviews. Copied onto the ECS agent as TECHNICAL_SIMLI_FACE_ID."
   type        = string
   default     = "dd10cb5a-d31d-4f12-b69f-6db3383c006e"
 }
@@ -83,6 +83,12 @@ variable "agent_existing_subnet_ids" {
   description = "At least two outbound-capable subnet IDs when agent_create_network is false."
   type        = list(string)
   default     = []
+}
+
+variable "amplify_iam_service_role_arn" {
+  description = "Existing Amplify service role ARN from the console (required after connecting GitHub in the UI)."
+  type        = string
+  default     = ""
 }
 
 variable "connect_github" {

@@ -147,13 +147,14 @@ module "amplify" {
   count  = var.enable_amplify ? 1 : 0
   source = "./modules/amplify"
 
-  name_prefix         = local.name_prefix
-  api_endpoint        = module.api_gateway.api_endpoint
-  connect_repository  = var.connect_github
-  github_repository   = var.github_repository
-  github_access_token = var.github_access_token
-  branch_name         = var.amplify_branch_name
-  tags                = local.common_tags
+  name_prefix          = local.name_prefix
+  api_endpoint         = module.api_gateway.api_endpoint
+  connect_repository   = var.connect_github
+  github_repository    = var.github_repository
+  github_access_token  = var.github_access_token
+  iam_service_role_arn = var.amplify_iam_service_role_arn
+  branch_name          = var.amplify_branch_name
+  tags                 = local.common_tags
   environment_variables = {
     VITE_AWS_REGION                  = var.aws_region
     VITE_COGNITO_USER_POOL_ID        = module.cognito.user_pool_id

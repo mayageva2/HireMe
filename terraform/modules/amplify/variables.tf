@@ -11,6 +11,12 @@ variable "environment_variables" {
   default = {}
 }
 
+variable "iam_service_role_arn" {
+  description = "Amplify IAM service role. Required when the app was connected to GitHub in the console."
+  type        = string
+  default     = ""
+}
+
 variable "connect_repository" {
   description = "Attach the GitHub repo and create the branch. Requires github_access_token."
   type        = bool

@@ -54,7 +54,13 @@ function App() {
         try {
           const contextRes = await fetch(contextUrl);
           if (contextRes.ok) {
-            context = await contextRes.json();
+            const loaded = await contextRes.json();
+            context = {
+              ...fallbackContext,
+              ...loaded,
+              name: loaded.name?.trim() || fallbackContext.name,
+              role: loaded.role?.trim() || fallbackContext.role,
+            };
             console.log('Avatar context from Lambda:', context);
           } else {
             console.warn('GetAvatarContext failed, using Cognito profile fallback');

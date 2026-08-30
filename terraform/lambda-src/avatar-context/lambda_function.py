@@ -51,13 +51,15 @@ def lambda_handler(event, context):
         item = response.get("Item") or {}
 
         body = {
+            # Empty when the profile row has no name, so the caller can fall back
+            # to the Cognito display name instead of showing the username.
             "name": _first(
                 item,
                 "FirstName",
                 "firstName",
                 "name",
                 "fullName",
-                default=user_id,
+                default="",
             ),
             "role": _first(
                 item,

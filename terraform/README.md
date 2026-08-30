@@ -1,5 +1,8 @@
 # HireMe AWS infrastructure
 
+Full first-deploy runbook (Lambdas, GitHub/Amplify, Secrets Manager, ECR/ECS):
+[DEPLOY.md](./DEPLOY.md).
+
 This root Terraform stack reproduces the serverless architecture from the
 project document:
 
@@ -113,7 +116,7 @@ zero.
 ```hcl
 enable_agent            = true
 agent_desired_count     = 0
-hr_simli_face_id        = "your-current-hr-face-id"
+hr_simli_face_id        = "paste-lab-SIMLI_FACE_ID-here"
 technical_simli_face_id = "dd10cb5a-d31d-4f12-b69f-6db3383c006e"
 ```
 

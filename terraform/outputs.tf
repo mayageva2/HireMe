@@ -49,6 +49,14 @@ output "agent_secret_name" {
   value = var.enable_agent ? module.agent[0].secret_name : ""
 }
 
+output "hr_simli_face_id" {
+  value = var.hr_simli_face_id
+}
+
+output "technical_simli_face_id" {
+  value = var.technical_simli_face_id
+}
+
 output "lambda_role_arn" {
   value = module.iam.role_arn
 }

@@ -1,9 +1,13 @@
 terraform {
   required_version = ">= 1.6.0"
 
-  # After running scripts/create_remote_state.sh in the TARGET account,
-  # paste the printed backend "s3" { ... } block here, then:
-  #   terraform init -reconfigure && terraform apply
+  backend "s3" {
+    bucket         = "hireme-tfstate-765148471979"
+    key            = "hireme/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "hireme-terraform-locks"
+    encrypt        = true
+  }
 
   required_providers {
     aws = {
