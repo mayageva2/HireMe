@@ -202,7 +202,7 @@ function MicGateWhileAgentSpeaks() {
   return null;
 }
 
-/** Any disconnect ends the session, so hanging up never leaves the user on a dead room. */
+/** Any disconnect exits the page, so hanging up never leaves the user on a dead room. */
 function LeaveOnDisconnect({ onDisconnected }) {
   const room = useRoomContext();
 
@@ -218,12 +218,13 @@ function LeaveOnDisconnect({ onDisconnected }) {
 }
 
 /** Leaves the room so the agent's shutdown hook runs and writes the feedback report. */
-function EndInterviewButton({ onEnd }) {
+function EndInterviewButton({ onBeforeEnd, onEnd }) {
   const room = useRoomContext();
   const [isEnding, setIsEnding] = useState(false);
 
   const handleEnd = async () => {
     setIsEnding(true);
+    onBeforeEnd();
     try {
       await room?.disconnect();
     } catch (err) {
@@ -257,13 +258,22 @@ const InterviewPage = ({ token, avatarContext, onBack, onLogout, onFinish }) => 
     const [isStarted, setIsStarted] = useState(false);
     const [connectionError, setConnectionError] = useState(null);
     const serverUrl = LIVEKIT_URL;
+    // Hanging up returns to the dashboard; only the feedback button opens the report.
+    const wantsFeedbackRef = useRef(false);
+    const hasExitedRef = useRef(false);
+    const requestFeedback = useCallback(() => {
+      wantsFeedbackRef.current = true;
+    }, []);
     // The button and the disconnect event can both fire; only navigate once.
-    const hasFinishedRef = useRef(false);
-    const handleFinish = useCallback(() => {
-      if (hasFinishedRef.current) return;
-      hasFinishedRef.current = true;
-      onFinish?.();
-    }, [onFinish]);
+    const handleExit = useCallback(() => {
+      if (hasExitedRef.current) return;
+      hasExitedRef.current = true;
+      if (wantsFeedbackRef.current) {
+        onFinish?.();
+      } else {
+        onBack?.();
+      }
+    }, [onBack, onFinish]);
     const roomMetadata = JSON.stringify({
       agent_name: 'my-agent',
       name: avatarContext?.name || 'Candidate',
@@ -371,12 +381,14 @@ const InterviewPage = ({ token, avatarContext, onBack, onLogout, onFinish }) => 
                 }}
             >
                 <MicGateWhileAgentSpeaks />
-                <LeaveOnDisconnect onDisconnected={handleFinish} />
+                <LeaveOnDisconnect onDisconnected={handleExit} />
                 <InterviewVideoLayout />
                 <AvatarAudioPlayback />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                   <ControlBar controls={{ screenShare: false }} />
-                  {onFinish && <EndInterviewButton onEnd={handleFinish} />}
+                  {onFinish && (
+                    <EndInterviewButton onBeforeEnd={requestFeedback} onEnd={handleExit} />
+                  )}
                 </div>
                 <LiveTranscription />
         </LiveKitRoom>
