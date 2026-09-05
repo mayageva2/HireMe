@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { fetchUserAttributes, fetchAuthSession } from 'aws-amplify/auth';
+import { getCurrentUser, saveTargetRole, isExplicitTargetRole } from '../AuthComponents';
+import { fetchInterviews } from '../interviewsApi';
+import { AVATAR_CONTEXT_URL } from '../config';
 import avatarSimulationPic from '../assets/avatarImage.png'; 
 import cvDraftPic from '../assets/fakeCv.png';
 import CVPreviewer from './CVPreviewer';
-import { fetchInterviews } from '../interviewsApi';
 
 /** Maps interview scores (oldest first) onto the 200x100 viewBox of the trend chart. */
 function buildTrendChart(scores) {
@@ -99,7 +101,7 @@ const INTERVIEW_TIPS = [
   "In system design or operations questions, start with high-level constraints before diving into details. Define the scope and scale of the problem first."
 ];
 
-const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV, onShowFeedback, isStartingInterview }) => {
+const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV, onShowFeedback, isStartingInterview, onProfileUpdate }) => {
   const [realUser, setRealUser] = useState({ 
     fullName: 'Loading...', 
     profession: 'Loading...', 
@@ -115,13 +117,34 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
   const [interviews, setInterviews] = useState([]);
   const [hrProgress, setHrProgress] = useState({ history: {}, performanceScore: 0 });
   const [techProgress, setTechProgress] = useState({ history: {}, activeDifficulty: 'Beginner', performanceScore: 0 });
+  const [roleDraft, setRoleDraft] = useState('');
+  const [isEditingRole, setIsEditingRole] = useState(false);
+  const [isSavingRole, setIsSavingRole] = useState(false);
 
   useEffect(() => {
     async function loadData() {
       try {
         const attributes = await fetchUserAttributes();
-        const fullName = attributes['name'] || "User";
-        const profession = attributes['custom:profession'] || "Software Engineer";
+        const profile = await getCurrentUser();
+        const fullName = profile?.fullName || attributes['name'] || "User";
+        let profession = profile?.profession || attributes['custom:profession'] || "";
+        if (!isExplicitTargetRole(profession) && profile?.userId) {
+          try {
+            const contextUrl = `${AVATAR_CONTEXT_URL}?userId=${encodeURIComponent(profile.userId)}&sortKey=${encodeURIComponent(profile.sortKey || profile.userId)}`;
+            const contextRes = await fetch(contextUrl);
+            if (contextRes.ok) {
+              const context = await contextRes.json();
+              if (isExplicitTargetRole(context.role)) {
+                profession = context.role;
+              }
+            }
+          } catch (contextErr) {
+            console.warn('Could not load stored target role:', contextErr);
+          }
+        }
+        if (!profession) {
+          profession = "Software Engineer";
+        }
         const nameParts = fullName.split(' ');
         const initials = nameParts.length >= 2 
           ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
@@ -137,6 +160,10 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
           emailVerified: emailVerified,
           userId: userId
         });
+        setRoleDraft(profession);
+        if (profile && onProfileUpdate) {
+          onProfileUpdate({ ...profile, fullName, profession });
+        }
 
         const storedImg = localStorage.getItem(`hireme_profile_image_${userId}`);
         if (storedImg) {
@@ -215,13 +242,18 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
   const interviewStats = useMemo(() => {
     if (!interviews.length) return null;
 
-    const scores = interviews.map((session) => Number(session.feedback?.overallScore) || 0);
-    const average = scores.reduce((sum, score) => sum + score, 0) / scores.length;
     const latest = interviews[0];
+    const latestType = latest.interviewType || 'legacy';
+    const comparableInterviews = interviews.filter(
+      (session) => (session.interviewType || 'legacy') === latestType,
+    );
+    const scores = comparableInterviews.map((session) => Number(session.feedback?.overallScore) || 0);
+    const average = scores.reduce((sum, score) => sum + score, 0) / scores.length;
     const categories = Array.isArray(latest.feedback?.categories) ? latest.feedback.categories : [];
 
     return {
-      count: interviews.length,
+      count: comparableInterviews.length,
+      latestType,
       averageScore: (Math.round(average * 10) / 10).toFixed(1),
       latestScore: (Number(latest.feedback?.overallScore) || 0).toFixed(1),
       skills: categories.map((category) => ({
@@ -317,6 +349,22 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
         localStorage.setItem(`hireme_profile_image_${currentUserId}`, base64Str);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveRole = async () => {
+    if (realUser.fullName === 'Guest User' || realUser.fullName === 'Loading...') return;
+    setIsSavingRole(true);
+    try {
+      const updated = await saveTargetRole(roleDraft);
+      setRealUser((prev) => ({ ...prev, profession: updated.profession }));
+      setRoleDraft(updated.profession);
+      setIsEditingRole(false);
+      onProfileUpdate?.(updated);
+    } catch (err) {
+      alert(err.message || 'Could not save target role');
+    } finally {
+      setIsSavingRole(false);
     }
   };
   
@@ -540,9 +588,54 @@ const Dashboard = ({ onStartInterview, onLogout, onShowHR, onShowTech, onShowCV,
                 )}
               </div>
               <h2 className="text-xl font-black">{realUser.fullName}</h2>
-              <p className="text-[#a5abbd] text-xs mb-6 uppercase tracking-wider font-bold">
-                {resolvedPath.role}
-              </p>
+              {realUser.fullName === 'Guest User' || realUser.fullName === 'Loading...' ? (
+                <p className="text-[#a5abbd] text-xs mb-6 uppercase tracking-wider font-bold">
+                  {resolvedPath.role}
+                </p>
+              ) : isEditingRole ? (
+                <div className="w-full mb-6 space-y-2">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#a5abbd]">Target role</p>
+                  <input
+                    value={roleDraft}
+                    onChange={(e) => setRoleDraft(e.target.value)}
+                    maxLength={80}
+                    placeholder="e.g. Software Engineer"
+                    className="w-full px-3 py-2 rounded-lg bg-[#080e1c] border border-[#5bf4de]/40 text-sm text-white outline-none"
+                  />
+                  <div className="flex gap-2 justify-center">
+                    <button
+                      type="button"
+                      disabled={isSavingRole}
+                      onClick={handleSaveRole}
+                      className="px-3 py-1 rounded-lg bg-[#5bf4de] text-[#080e1c] text-[10px] font-black uppercase tracking-wider"
+                    >
+                      {isSavingRole ? 'Saving…' : 'Save'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRoleDraft(realUser.profession);
+                        setIsEditingRole(false);
+                      }}
+                      className="px-3 py-1 rounded-lg border border-[#424858] text-[10px] font-black uppercase tracking-wider text-[#a5abbd]"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRoleDraft(realUser.profession);
+                    setIsEditingRole(true);
+                  }}
+                  className="text-[#a5abbd] text-xs mb-6 uppercase tracking-wider font-bold hover:text-[#5bf4de] flex items-center gap-1"
+                >
+                  {realUser.profession}
+                  <span className="material-symbols-outlined text-sm">edit</span>
+                </button>
+              )}
               <div className="w-full space-y-2 mb-8">
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
                   <span className="text-[#a5abbd]">progress</span>

@@ -33,6 +33,30 @@ output "hr_questions_table_name" {
   value = module.storage.hr_questions_table_name
 }
 
+output "agent_ecr_repository_url" {
+  value = var.enable_agent ? module.agent[0].ecr_repository_url : ""
+}
+
+output "agent_ecs_cluster_name" {
+  value = var.enable_agent ? module.agent[0].ecs_cluster_name : ""
+}
+
+output "agent_ecs_service_name" {
+  value = var.enable_agent ? module.agent[0].ecs_service_name : ""
+}
+
+output "agent_secret_name" {
+  value = var.enable_agent ? module.agent[0].secret_name : ""
+}
+
+output "hr_simli_face_id" {
+  value = var.hr_simli_face_id
+}
+
+output "technical_simli_face_id" {
+  value = var.technical_simli_face_id
+}
+
 output "lambda_role_arn" {
   value = module.iam.role_arn
 }

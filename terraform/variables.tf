@@ -38,6 +38,59 @@ variable "enable_cloudfront" {
   default     = false
 }
 
+variable "enable_agent" {
+  description = "Create the ECR repository and ECS Fargate interview agent."
+  type        = bool
+  default     = false
+}
+
+variable "agent_desired_count" {
+  description = "Number of Fargate agent tasks. Keep 0 for bootstrap, then set 1 after pushing the image and secret."
+  type        = number
+  default     = 0
+}
+
+variable "agent_image_tag" {
+  type    = string
+  default = "latest"
+}
+
+variable "hr_simli_face_id" {
+  description = "Simli face ID for HR interviews. Copied onto the ECS agent as HR_SIMLI_FACE_ID and SIMLI_FACE_ID."
+  type        = string
+  default     = ""
+}
+
+variable "technical_simli_face_id" {
+  description = "Simli face ID for technical interviews. Copied onto the ECS agent as TECHNICAL_SIMLI_FACE_ID."
+  type        = string
+  default     = "dd10cb5a-d31d-4f12-b69f-6db3383c006e"
+}
+
+variable "agent_create_network" {
+  description = "Create a small public VPC for the Fargate worker."
+  type        = bool
+  default     = true
+}
+
+variable "agent_existing_vpc_id" {
+  description = "Existing VPC ID when agent_create_network is false."
+  type        = string
+  default     = null
+}
+
+variable "agent_existing_subnet_ids" {
+  description = "At least two outbound-capable subnet IDs when agent_create_network is false."
+  type        = list(string)
+  default     = []
+}
+
+variable "amplify_iam_service_role_arn" {
+  description = "Existing Amplify service role ARN from the console (required after connecting GitHub in the UI)."
+  type        = string
+  default     = ""
+}
+
 variable "connect_github" {
   description = "Let Terraform attach the GitHub repo to Amplify. Needs github_access_token. Leave false to connect the repo in the Amplify console instead."
   type        = bool

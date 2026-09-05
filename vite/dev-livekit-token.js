@@ -30,7 +30,7 @@ function readJsonBody(req) {
   })
 }
 
-async function mintInterviewToken({ name, role, userId, sortKey }) {
+async function mintInterviewToken({ name, role, userId, sortKey, interviewType, jobRequirements }) {
   const apiKey = process.env.LIVEKIT_API_KEY
   const apiSecret = process.env.LIVEKIT_API_SECRET
   if (!apiKey || !apiSecret) {
@@ -39,6 +39,9 @@ async function mintInterviewToken({ name, role, userId, sortKey }) {
 
   // Fresh room per session so a crashed agent job does not block the next interview.
   const roomName = `interview-${randomUUID().slice(0, 8)}`
+  const normalizedInterviewType = interviewType === 'technical' ? 'technical' : 'hr'
+  const normalizedJobRequirements =
+    normalizedInterviewType === 'technical' ? String(jobRequirements || '').trim().slice(0, 6000) : ''
   // user_id travels to the agent so it knows which user the feedback belongs to.
   const metadata = JSON.stringify({
     agent_name: 'my-agent',
@@ -46,6 +49,8 @@ async function mintInterviewToken({ name, role, userId, sortKey }) {
     role: role || 'General Position',
     user_id: userId || '',
     sort_key: sortKey || '',
+    interview_type: normalizedInterviewType,
+    job_requirements: normalizedJobRequirements,
   })
 
   const token = new AccessToken(apiKey, apiSecret, {
@@ -90,6 +95,8 @@ export function devLivekitTokenPlugin() {
             role: body.role,
             userId: body.userId,
             sortKey: body.sortKey,
+            interviewType: body.interviewType,
+            jobRequirements: body.jobRequirements,
           })
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify(result))

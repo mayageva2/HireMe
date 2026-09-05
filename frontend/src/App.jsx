@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Login, SignUp, getCurrentUser, logout } from './AuthComponents';
+import { Login, SignUp, getCurrentUser, logout, isExplicitTargetRole } from './AuthComponents';
 import Dashboard from './components/Dashboard';
 import InterviewPage from './InterviewPage';
 import HRFlashcards from './components/HRFlashCards';
 import TechFlashcards from './components/TechFlashCards';
 import CVBuilder from './components/CVBuilder';
+import InterviewSetup from './components/InterviewSetup';
 import InterviewFeedback from './components/InterviewFeedback';
 import { AVATAR_CONTEXT_URL, LIVEKIT_TOKEN_URL } from './config';
 
@@ -38,7 +39,7 @@ function App() {
     checkUser();
   }, []);
 
-  const handleStartInterview = async () => {
+  const handleStartInterview = async ({ interviewType = 'hr', jobDescription } = {}) => {
     setIsStartingInterview(true);
     try {
       const profile = (await getCurrentUser()) || userProfile;
@@ -53,7 +54,13 @@ function App() {
         try {
           const contextRes = await fetch(contextUrl);
           if (contextRes.ok) {
-            context = await contextRes.json();
+            const loaded = await contextRes.json();
+            context = {
+              ...fallbackContext,
+              ...loaded,
+              name: loaded.name?.trim() || fallbackContext.name,
+              role: loaded.role?.trim() || fallbackContext.role,
+            };
             console.log('Avatar context from Lambda:', context);
           } else {
             console.warn('GetAvatarContext failed, using Cognito profile fallback');
@@ -63,6 +70,21 @@ function App() {
         }
       }
 
+      // Only override DynamoDB when the user saved a real title in the dashboard.
+      if (isExplicitTargetRole(profile?.profession)) {
+        context = { ...context, role: profile.profession };
+      }
+
+      const normalizedInterviewType = interviewType === 'technical' ? 'technical' : 'hr';
+      const jobRequirements =
+        normalizedInterviewType === 'technical'
+          ? (jobDescription || '').trim().slice(0, 6000)
+          : '';
+      if (jobRequirements) {
+        context = { ...context, jobRequirements };
+      }
+      context = { ...context, interviewType: normalizedInterviewType };
+
       const tokenRes = await fetch(LIVEKIT_TOKEN_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -70,10 +92,15 @@ function App() {
           ...context,
           userId: profile?.userId,
           sortKey: profile?.sortKey,
+          interviewType: normalizedInterviewType,
+          jobRequirements,
         }),
       });
       if (!tokenRes.ok) {
-        throw new Error(`LiveKit token request failed (${tokenRes.status})`);
+        const errorBody = await tokenRes.json().catch(() => ({}));
+        throw new Error(
+          errorBody.error || `LiveKit token request failed (${tokenRes.status})`,
+        );
       }
 
       const data = await tokenRes.json();
@@ -185,13 +212,14 @@ function App() {
           {mainView === 'dashboard' ? (
             <Dashboard
               user={userProfile}
-              onStartInterview={handleStartInterview}
+              onStartInterview={() => setMainView('interview_setup')}
               isStartingInterview={isStartingInterview}
               onShowHR={() => setMainView('hr_questions')} 
               onShowTech={() => setMainView('tech_questions')}
               onShowCV={() => setMainView('cv_builder')}
               onShowFeedback={handleShowFeedbackHistory}
               onLogout={handleLogout}
+              onProfileUpdate={setUserProfile}
             />
           ) : mainView === 'hr_questions' ? (
             <div className="min-h-screen bg-[#080e1c] pt-20">
@@ -235,6 +263,13 @@ function App() {
             <CVBuilder
               onBack={() => setMainView('dashboard')}
               onLogout={handleLogout}
+            />
+          ) : mainView === 'interview_setup' ? (
+            <InterviewSetup
+              defaultRole={userProfile?.profession}
+              isStarting={isStartingInterview}
+              onBack={() => setMainView('dashboard')}
+              onStart={handleStartInterview}
             />
           ) : mainView === 'feedback' ? (
             <InterviewFeedback

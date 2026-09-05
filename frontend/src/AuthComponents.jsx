@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signIn, signUp, confirmSignUp, signOut, fetchUserAttributes, fetchAuthSession } from 'aws-amplify/auth';
+import { signIn, signUp, confirmSignUp, signOut, fetchUserAttributes, fetchAuthSession, updateUserAttributes } from 'aws-amplify/auth';
 
 /** DynamoDB HireMe_Table uses the Cognito username for both User id and Sort Key. */
 function getDynamoUserKeys(attributes, sub) {
@@ -14,9 +14,74 @@ function getDynamoUserKeys(attributes, sub) {
   };
 }
 
+const PLACEHOLDER_ROLES = new Set([
+  '',
+  'professional',
+  'software engineer',
+  'loading...',
+  'guest',
+  'general position',
+  'candidate',
+]);
+
+export function isExplicitTargetRole(role) {
+  return Boolean(role) && !PLACEHOLDER_ROLES.has(String(role).trim().toLowerCase());
+}
+
 export const logout = async () => {
   await signOut();
 };
+
+async function clearLocalAuthSession() {
+  try {
+    await signOut();
+  } catch {
+    // No local session, or Cognito already dropped it.
+  }
+}
+
+/** Persist the interview target role. Cognito is primary; DynamoDB keeps the avatar Lambda in sync. */
+export async function saveTargetRole(profession) {
+  const trimmed = (profession || '').trim();
+  if (!trimmed) {
+    throw new Error('Enter a target role');
+  }
+
+  const profile = await getCurrentUser();
+  if (!profile?.userId || profile.userId === 'guest') {
+    throw new Error('Sign in to change your target role');
+  }
+
+  localStorage.setItem(`hireme_target_role_${profile.userId}`, trimmed);
+
+  try {
+    await updateUserAttributes({
+      userAttributes: { 'custom:profession': trimmed },
+    });
+  } catch (err) {
+    console.warn('Could not save role to Cognito (attribute may be missing on this pool):', err);
+  }
+
+  try {
+    const session = await fetchAuthSession();
+    const token = session.tokens?.idToken?.toString();
+    const res = await fetch('/api/cv/target-role', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ role: trimmed }),
+    });
+    if (!res.ok) {
+      console.warn('Could not save role to DynamoDB:', res.status);
+    }
+  } catch (err) {
+    console.warn('Could not save role to DynamoDB:', err);
+  }
+
+  return { ...profile, profession: trimmed };
+}
 
 export const getCurrentUser = async () => {
   try {
@@ -27,7 +92,10 @@ export const getCurrentUser = async () => {
 
     return {
       fullName: attributes.name || 'User',
-      profession: attributes['custom:profession'] || 'Professional',
+      profession:
+        localStorage.getItem(`hireme_target_role_${userId}`) ||
+        attributes['custom:profession'] ||
+        '',
       email: attributes.email,
       userId,
       sortKey,
@@ -55,6 +123,7 @@ export const Login = ({ onSwitch, onSuccess }) => {
     }
 
     try {
+      await clearLocalAuthSession();
       await signIn({
         username: usernameToQuery,
         password: password.trim(),
@@ -116,6 +185,8 @@ export const Login = ({ onSwitch, onSuccess }) => {
 
 export const SignUp = ({ onSwitch }) => {
   const [step, setStep] = useState('form');
+  const [fullName, setFullName] = useState('');
+  const [targetRole, setTargetRole] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
@@ -125,18 +196,25 @@ export const SignUp = ({ onSwitch }) => {
     e.preventDefault();
     setLoading(true);
     try {
+      await clearLocalAuthSession();
       const username = email.split('@')[0].trim();
+      const name = fullName.trim() || username;
+      const profession = targetRole.trim();
       await signUp({
         username,
         password,
         options: {
           userAttributes: {
             email,
-            name: username,
-            given_name: username,
+            name,
+            given_name: name,
+            ...(profession ? { 'custom:profession': profession } : {}),
           },
         },
       });
+      if (profession) {
+        localStorage.setItem(`hireme_target_role_${username}`, profession);
+      }
       setStep('confirm');
     } catch (err) {
       alert('שגיאה בהרשמה: ' + err.message);
@@ -186,7 +264,29 @@ export const SignUp = ({ onSwitch }) => {
       <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem' }}>Join HireMe</h1>
       <p style={{ color: '#a5abbd', marginBottom: '2rem' }}>Start your AI interview journey today.</p>
       <div className="auth-field-group">
-        <label className="auth-label">Institutional Email</label>
+        <label className="auth-label">Full name</label>
+        <input
+          className="auth-input"
+          type="text"
+          placeholder="Maya Cohen"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          required
+        />
+      </div>
+      <div className="auth-field-group">
+        <label className="auth-label">Target job title</label>
+        <input
+          className="auth-input"
+          type="text"
+          placeholder="Junior DevOps Engineer"
+          value={targetRole}
+          onChange={(e) => setTargetRole(e.target.value)}
+          required
+        />
+      </div>
+      <div className="auth-field-group">
+        <label className="auth-label">Email</label>
         <input
           className="auth-input"
           type="email"

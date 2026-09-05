@@ -41,7 +41,7 @@ def lambda_handler(event, context):
         }
 
     try:
-        table = boto3.resource("dynamodb").Table(os.environ["DYNAMODB_TABLE"])
+        table = boto3.resource("dynamodb").Table(os.environ.get("DYNAMODB_TABLE", "HireMe_Table"))
         response = table.get_item(
             Key={
                 "User id": user_id,
@@ -51,16 +51,19 @@ def lambda_handler(event, context):
         item = response.get("Item") or {}
 
         body = {
+            # Empty when the profile row has no name, so the caller can fall back
+            # to the Cognito display name instead of showing the username.
             "name": _first(
                 item,
                 "FirstName",
                 "firstName",
                 "name",
                 "fullName",
-                default=user_id,
+                default="",
             ),
             "role": _first(
                 item,
+                "TargetField",
                 "Target Field",
                 "targetField",
                 "profession",

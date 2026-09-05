@@ -43,6 +43,12 @@ function formatDuration(seconds) {
   return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
 }
 
+function interviewTypeLabel(value) {
+  if (value === 'technical') return 'Technical';
+  if (value === 'hr') return 'HR';
+  return 'Mixed';
+}
+
 function ScoreRing({ score }) {
   const clamped = Math.max(0, Math.min(10, Number(score) || 0));
   const radius = 52;
@@ -136,6 +142,7 @@ function FeedbackReport({ session }) {
   const nextSteps = Array.isArray(feedback.nextSteps) ? feedback.nextSteps : [];
   const transcript = Array.isArray(session.transcript) ? session.transcript : [];
   const duration = formatDuration(session.durationSeconds);
+  const interviewLabel = interviewTypeLabel(session.interviewType);
 
   return (
     <div className="space-y-6">
@@ -144,7 +151,7 @@ function FeedbackReport({ session }) {
           <ScoreRing score={feedback.overallScore} />
           <div className="flex-1 text-center sm:text-left">
             <p className="text-[10px] font-black uppercase tracking-widest text-[#a5abbd] mb-1">
-              {session.role || 'Interview'} · {formatDate(session.endedAt)}
+              {interviewLabel} · {session.role || 'Interview'} · {formatDate(session.endedAt)}
               {duration ? ` · ${duration}` : ''}
             </p>
             <h2 className="text-xl font-black mb-3">Interview Feedback</h2>
@@ -438,6 +445,7 @@ const InterviewFeedback = ({ roomName, onBack, onLogout }) => {
               {sessions.map((session) => {
                 const isActive = session.id === selected.id;
                 const score = Number(session.feedback?.overallScore) || 0;
+                const interviewLabel = interviewTypeLabel(session.interviewType);
                 return (
                   <button
                     key={session.id}
@@ -456,7 +464,7 @@ const InterviewFeedback = ({ roomName, onBack, onLogout }) => {
                       </span>
                     </div>
                     <p className="text-[10px] uppercase tracking-widest text-[#a5abbd]">
-                      {formatDate(session.endedAt)}
+                      {interviewLabel} · {formatDate(session.endedAt)}
                     </p>
                   </button>
                 );

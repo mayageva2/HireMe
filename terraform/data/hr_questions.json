@@ -1,0 +1,302 @@
+[
+  {
+    "category": "Growth",
+    "question": "What are your long-term career goals?",
+    "id": "36",
+    "answer": "Talk about wanting to become an expert in your field and eventually taking on leadership or mentoring roles."
+  },
+  {
+    "category": "General",
+    "question": "Do you have any questions for us?",
+    "id": "49",
+    "answer": "Always ask! Ask about the team culture, the onboarding process, or what a typical day looks like."
+  },
+  {
+    "category": "Stress",
+    "question": "What is the most stressful situation you have faced at work?",
+    "id": "33",
+    "answer": "Describe the event but focus on the positive outcome and how you managed to stay composed."
+  },
+  {
+    "category": "Balance",
+    "question": "How do you maintain a good work-life balance?",
+    "id": "22",
+    "answer": "Explain that you work hard during hours but also prioritize rest to stay productive and avoid burnout."
+  },
+  {
+    "category": "Decision Making",
+    "question": "How do you handle making a difficult decision?",
+    "id": "18",
+    "answer": "Discuss gathering the necessary facts, weighing the pros and cons, and considering the impact on the team."
+  },
+  {
+    "category": "Closing",
+    "question": "Is there anything else we should know about you?",
+    "id": "50",
+    "answer": "Summarize your excitement for the role and reinforce why you are the best candidate."
+  },
+  {
+    "category": "Behavioral",
+    "question": "Tell me about a time you went above and beyond.",
+    "id": "16",
+    "answer": "Give an example where you took initiative to help a colleague or finish a project beyond what was expected."
+  },
+  {
+    "category": "Ethics",
+    "question": "What does 'professionalism' mean to you?",
+    "id": "40",
+    "answer": "Talk about being reliable, respectful to others, and taking pride in the quality of your work."
+  },
+  {
+    "category": "Motivation",
+    "question": "Why do you want to work here?",
+    "id": "2",
+    "answer": "Show you've researched the company and connect their values or goals to your own professional interests."
+  },
+  {
+    "category": "Productivity",
+    "question": "How do you prioritize your tasks when you have too much to do?",
+    "id": "13",
+    "answer": "Explain your method for deciding what is urgent vs. important, such as using lists or digital tools."
+  },
+  {
+    "category": "Behavioral",
+    "question": "Tell me about a time you made a mistake.",
+    "id": "8",
+    "answer": "Own the mistake, explain how you fixed it, and share what you learned to prevent it in the future."
+  },
+  {
+    "category": "Culture",
+    "question": "What is your favorite part about working in a team?",
+    "id": "48",
+    "answer": "Mention the ability to brainstorm different ideas and the support system that comes with collaboration."
+  },
+  {
+    "category": "Growth",
+    "question": "Where do you see yourself in five years?",
+    "id": "9",
+    "answer": "Express a desire to grow your skills, take on more responsibility, and contribute to the company's success."
+  },
+  {
+    "category": "Introduction",
+    "question": "Tell me about yourself.",
+    "id": "1",
+    "answer": "Summarize your background, highlight your main achievements, and explain why you're a good fit for this role."
+  },
+  {
+    "category": "Problem Solving",
+    "question": "Describe a time you solved a problem with very little information.",
+    "id": "31",
+    "answer": "Explain how you used logic, did quick research, or consulted the right people to fill in the gaps."
+  },
+  {
+    "category": "Conflict",
+    "question": "How do you handle conflict with a coworker?",
+    "id": "6",
+    "answer": "Explain that you stay calm, listen to their perspective, and focus on finding a professional solution."
+  },
+  {
+    "category": "Productivity",
+    "question": "What do you do when you have downtime at work?",
+    "id": "38",
+    "answer": "Show initiative. Talk about organizing your workspace, helping others, or learning a new skill."
+  },
+  {
+    "category": "Behavioral",
+    "question": "Tell me about a time you had to work with someone difficult.",
+    "id": "28",
+    "answer": "Focus on how you remained professional, communicated clearly, and didn't let personality clashes affect work."
+  },
+  {
+    "category": "Communication",
+    "question": "How do you handle a situation where you don't know the answer to a question?",
+    "id": "30",
+    "answer": "Be honest. Say you don't know but explain exactly how you will find the information and get back to them."
+  },
+  {
+    "category": "Perspective",
+    "question": "What do you like least about your current/last job?",
+    "id": "35",
+    "answer": "Be positive. Instead of complaining, focus on things you've outgrown or why you're looking for new challenges."
+  },
+  {
+    "category": "Teamwork",
+    "question": "How do you help a new team member feel welcome?",
+    "id": "24",
+    "answer": "Talk about introducing yourself, offering help, and showing them the ropes or where things are."
+  },
+  {
+    "category": "Values",
+    "question": "What are three words a former manager would use to describe you?",
+    "id": "27",
+    "answer": "Choose positive, professional traits like 'reliable', 'proactive', and 'honest'."
+  },
+  {
+    "category": "Teamwork",
+    "question": "Do you prefer working alone or in a team?",
+    "id": "5",
+    "answer": "Show flexibility: you enjoy collaborating but are also responsible enough to work independently."
+  },
+  {
+    "category": "Weaknesses",
+    "question": "What is your greatest weakness?",
+    "id": "4",
+    "answer": "State a real but manageable weakness and describe the steps you are taking to improve it."
+  },
+  {
+    "category": "Perspective",
+    "question": "What is one thing you would change about your previous workplace?",
+    "id": "44",
+    "answer": "Focus on a constructive improvement, like 'more frequent team check-ins' or 'better documentation'."
+  },
+  {
+    "category": "Cultural Fit",
+    "question": "What makes a good manager in your opinion?",
+    "id": "32",
+    "answer": "Focus on qualities like clear communication, fairness, and being supportive of the team's growth."
+  },
+  {
+    "category": "Adaptability",
+    "question": "How do you handle a last-minute change to a project?",
+    "id": "41",
+    "answer": "Explain that you stay flexible, re-prioritize your tasks immediately, and communicate the impact to the team."
+  },
+  {
+    "category": "Conflict",
+    "question": "How do you handle it if you disagree with your boss?",
+    "id": "34",
+    "answer": "Explain that you would voice your concerns privately with facts, listen to their side, and respect the final decision."
+  },
+  {
+    "category": "Reliability",
+    "question": "What would you do if you were going to be late for work?",
+    "id": "23",
+    "answer": "State that you would call your manager as soon as possible, explain the situation, and give an ETA."
+  },
+  {
+    "category": "Motivation",
+    "question": "How do you stay motivated during repetitive tasks?",
+    "id": "46",
+    "answer": "Focus on the 'big picture'\u2014how the task helps the company\u2014or set small personal goals to stay efficient."
+  },
+  {
+    "category": "Communication",
+    "question": "How do you ensure you understand instructions?",
+    "id": "19",
+    "answer": "Talk about active listening, taking notes, and asking clarifying questions before starting the task."
+  },
+  {
+    "category": "Ambition",
+    "question": "What is your proudest professional achievement?",
+    "id": "26",
+    "answer": "Pick a moment where you overcame a challenge or delivered high-quality work that helped your team."
+  },
+  {
+    "category": "Stress",
+    "question": "How do you handle pressure or tight deadlines?",
+    "id": "7",
+    "answer": "Discuss prioritization, staying organized, and maintaining a positive attitude during busy times."
+  },
+  {
+    "category": "Adaptability",
+    "question": "Describe a time you had to adapt to a major change at work.",
+    "id": "11",
+    "answer": "Talk about staying open-minded, asking questions to understand the change, and helping others adjust."
+  },
+  {
+    "category": "Strengths",
+    "question": "What is your greatest professional strength?",
+    "id": "3",
+    "answer": "Pick a skill relevant to the job (e.g., communication, reliability) and give a brief example of it in action."
+  },
+  {
+    "category": "General",
+    "question": "Why should we hire you?",
+    "id": "20",
+    "answer": "Summarize your skills, your positive attitude, and how you will solve problems for the company."
+  },
+  {
+    "category": "Teamwork",
+    "question": "What is your ideal team size to work in?",
+    "id": "39",
+    "answer": "State that you can work in any size, but highlight the benefits of small teams (speed) or large teams (diversity of ideas)."
+  },
+  {
+    "category": "General",
+    "question": "What are your hobbies outside of work?",
+    "id": "45",
+    "answer": "Be authentic. This shows you are a well-rounded person with interests and discipline."
+  },
+  {
+    "category": "Behavioral",
+    "question": "Tell me about a time you had to deliver bad news.",
+    "id": "37",
+    "answer": "Explain how you were direct, empathetic, and prepared with solutions or next steps."
+  },
+  {
+    "category": "Adaptability",
+    "question": "How do you keep your skills up to date?",
+    "id": "29",
+    "answer": "Mention reading industry news, taking online courses, or learning from experienced colleagues."
+  },
+  {
+    "category": "Initiative",
+    "question": "Tell me about a time you suggested a new way of doing something.",
+    "id": "21",
+    "answer": "Highlight your ability to notice inefficiencies and propose improvements politely and logically."
+  },
+  {
+    "category": "General",
+    "question": "What are your salary expectations?",
+    "id": "25",
+    "answer": "Provide a range based on your research and experience, but state that you are open to negotiation."
+  },
+  {
+    "category": "Feedback",
+    "question": "How do you respond to negative feedback?",
+    "id": "12",
+    "answer": "View it as a learning opportunity. Explain how you take the feedback constructively and use it to improve."
+  },
+  {
+    "category": "Cultural Fit",
+    "question": "What kind of work environment do you like best?",
+    "id": "17",
+    "answer": "Describe a place where communication is clear, people support each other, and goals are well-defined."
+  },
+  {
+    "category": "Service",
+    "question": "How do you handle an unhappy customer or client?",
+    "id": "10",
+    "answer": "Focus on active listening, empathy, and working efficiently to resolve their issue or find an alternative."
+  },
+  {
+    "category": "Self-Reflection",
+    "question": "What is the biggest lesson you've learned in your career?",
+    "id": "47",
+    "answer": "Share a professional insight, like the importance of communication or learning to accept feedback early."
+  },
+  {
+    "category": "Motivation",
+    "question": "What motivates you to do a good job?",
+    "id": "15",
+    "answer": "Focus on internal factors like professional pride, helping the team succeed, or reaching personal goals."
+  },
+  {
+    "category": "Communication",
+    "question": "Describe your communication style.",
+    "id": "42",
+    "answer": "Describe it as direct, clear, and focused on listening as much as speaking."
+  },
+  {
+    "category": "Interpersonal",
+    "question": "How do you build trust with your colleagues?",
+    "id": "43",
+    "answer": "By being consistent, keeping your promises, and being willing to help others when they are stuck."
+  },
+  {
+    "category": "Integrity",
+    "question": "What would you do if you saw a coworker doing something unethical?",
+    "id": "14",
+    "answer": "Emphasize following company policy and reporting the issue to the appropriate supervisor or HR."
+  }
+]

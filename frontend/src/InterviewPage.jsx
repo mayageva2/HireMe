@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { 
   LiveKitRoom, 
   ControlBar, 
@@ -12,7 +12,7 @@ import {
   useTracks,
   useRoomContext,
 } from '@livekit/components-react';
-import { Track } from 'livekit-client';
+import { RoomEvent, Track } from 'livekit-client';
 import '@livekit/components-styles';
 import { LIVEKIT_URL } from './config';
 
@@ -202,13 +202,29 @@ function MicGateWhileAgentSpeaks() {
   return null;
 }
 
+/** Any disconnect exits the page, so hanging up never leaves the user on a dead room. */
+function LeaveOnDisconnect({ onDisconnected }) {
+  const room = useRoomContext();
+
+  useEffect(() => {
+    if (!room) return undefined;
+    room.on(RoomEvent.Disconnected, onDisconnected);
+    return () => {
+      room.off(RoomEvent.Disconnected, onDisconnected);
+    };
+  }, [room, onDisconnected]);
+
+  return null;
+}
+
 /** Leaves the room so the agent's shutdown hook runs and writes the feedback report. */
-function EndInterviewButton({ onEnd }) {
+function EndInterviewButton({ onBeforeEnd, onEnd }) {
   const room = useRoomContext();
   const [isEnding, setIsEnding] = useState(false);
 
   const handleEnd = async () => {
     setIsEnding(true);
+    onBeforeEnd();
     try {
       await room?.disconnect();
     } catch (err) {
@@ -242,10 +258,28 @@ const InterviewPage = ({ token, avatarContext, onBack, onLogout, onFinish }) => 
     const [isStarted, setIsStarted] = useState(false);
     const [connectionError, setConnectionError] = useState(null);
     const serverUrl = LIVEKIT_URL;
+    // Hanging up returns to the dashboard; only the feedback button opens the report.
+    const wantsFeedbackRef = useRef(false);
+    const hasExitedRef = useRef(false);
+    const requestFeedback = useCallback(() => {
+      wantsFeedbackRef.current = true;
+    }, []);
+    // The button and the disconnect event can both fire; only navigate once.
+    const handleExit = useCallback(() => {
+      if (hasExitedRef.current) return;
+      hasExitedRef.current = true;
+      if (wantsFeedbackRef.current) {
+        onFinish?.();
+      } else {
+        onBack?.();
+      }
+    }, [onBack, onFinish]);
     const roomMetadata = JSON.stringify({
       agent_name: 'my-agent',
       name: avatarContext?.name || 'Candidate',
       role: avatarContext?.role || 'General Position',
+      interview_type: avatarContext?.interviewType === 'technical' ? 'technical' : 'hr',
+      job_requirements: avatarContext?.jobRequirements || '',
     });
 
     if (!token) {
@@ -264,7 +298,11 @@ const InterviewPage = ({ token, avatarContext, onBack, onLogout, onFinish }) => 
             <h2>Ready to start?</h2>
             {avatarContext && (
               <p style={{ color: '#a5abbd', marginBottom: '16px' }}>
-                Interview for: <strong style={{ color: '#5bf4de' }}>{avatarContext.role}</strong>
+                <strong style={{ color: '#5bf4de' }}>
+                  {avatarContext.interviewType === 'technical' ? 'Technical' : 'HR'} interview
+                </strong>
+                {' for '}{avatarContext.role}
+                {avatarContext.jobRequirements ? ' · based on job description' : ''}
               </p>
             )}
             <button
@@ -343,11 +381,14 @@ const InterviewPage = ({ token, avatarContext, onBack, onLogout, onFinish }) => 
                 }}
             >
                 <MicGateWhileAgentSpeaks />
+                <LeaveOnDisconnect onDisconnected={handleExit} />
                 <InterviewVideoLayout />
                 <AvatarAudioPlayback />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                   <ControlBar controls={{ screenShare: false }} />
-                  {onFinish && <EndInterviewButton onEnd={onFinish} />}
+                  {onFinish && (
+                    <EndInterviewButton onBeforeEnd={requestFeedback} onEnd={handleExit} />
+                  )}
                 </div>
                 <LiveTranscription />
         </LiveKitRoom>
