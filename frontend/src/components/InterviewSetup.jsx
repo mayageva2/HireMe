@@ -21,7 +21,8 @@ const InterviewSetup = ({ defaultRole, isStarting, onBack, onStart }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#080e1c] text-[#e0e5f9] font-inter px-6 py-10">
+    // html/body have overflow:hidden, so this page scrolls itself.
+    <div className="min-h-screen max-h-screen overflow-y-auto custom-scroll bg-[#080e1c] text-[#e0e5f9] font-inter px-6 py-10">
       <div className="max-w-[640px] mx-auto">
         <button
           type="button"
