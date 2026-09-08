@@ -222,7 +222,8 @@ function App() {
               onProfileUpdate={setUserProfile}
             />
           ) : mainView === 'hr_questions' ? (
-            <div className="min-h-screen bg-[#080e1c] pt-20">
+            // html/body have overflow:hidden, so this page scrolls itself.
+            <div className="min-h-screen max-h-screen overflow-y-auto custom-scroll bg-[#080e1c] pt-20 pb-16">
               <button 
                 onClick={() => setMainView('dashboard')}
                 className="ml-10 mb-6 flex items-center gap-2 text-[#5bf4de] font-bold transition-all duration-300"
@@ -241,7 +242,8 @@ function App() {
               <HRFlashcards />
             </div>
           ) : mainView === 'tech_questions' ? (
-            <div className="min-h-screen bg-[#080e1c] pt-20">
+            // html/body have overflow:hidden, so this page scrolls itself.
+            <div className="min-h-screen max-h-screen overflow-y-auto custom-scroll bg-[#080e1c] pt-20 pb-16">
               <button 
                 onClick={() => setMainView('dashboard')}
                 className="ml-10 mb-6 flex items-center gap-2 text-[#5bf4de] font-bold transition-all duration-300"
